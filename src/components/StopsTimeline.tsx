@@ -1,0 +1,210 @@
+// src/components/StopsTimeline.tsx
+import { useEffect, useRef, useState } from 'react'
+import { Trip } from '@lib/types'
+import SectionHeader from './SectionHeader'
+import LegEditor from './LegEditor'
+import StopsGraph from './StopsGraph'
+import { EmojiButton } from './ui'
+import { useI18n } from '../i18n'
+
+export default function StopsTimeline({
+  trip,
+  addStop,
+  setStopField,
+  setSelectedStopId,
+  deleteStop,
+  moveStop,
+  setLegField,
+  setTripField,
+}: {
+  trip: Trip
+  addStop: () => void
+  setStopField: (stopId: string, field: any, value: any) => void
+  setSelectedStopId: (id: string | null) => void
+  deleteStop: (id: string) => void
+  moveStop: (id: string, dir: 'up' | 'down') => void
+  setLegField: (id: string, field: any, value: any) => void
+  setTripField: (f: keyof Trip, v: any) => void
+}) {
+  const { t } = useI18n()
+  const [activeStopId, setActiveStopId] = useState<string | null>(null)
+  const [mountingId, setMountingId] = useState<string | null>(null)
+
+  const wrapperRef = useRef<HTMLDivElement>(null)
+  const cardRefs = useRef<Record<string, HTMLDivElement | null>>({})
+  const setCardRef = (id: string) => (el: HTMLDivElement | null) => {
+    cardRefs.current[id] = el
+  }
+
+  // open new stop + prevent flicker
+  const prevCountRef = useRef<number>(trip.stops?.length ?? 0)
+  useEffect(() => {
+    const prev = prevCountRef.current
+    const curr = trip.stops?.length ?? 0
+    if (curr > prev && curr > 0) {
+      const newStop = trip.stops[curr - 1]
+      setSelectedStopId(null)
+      setActiveStopId(newStop.id)
+      setMountingId(newStop.id)
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => setMountingId(null))
+      })
+      setTimeout(() => {
+        cardRefs.current[newStop.id]?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+      }, 0)
+    }
+    prevCountRef.current = curr
+  }, [trip.stops, setSelectedStopId])
+
+  // close panel if active stop removed
+  useEffect(() => {
+    if (!activeStopId) return
+    const stillThere = (trip.stops ?? []).some((s) => s.id === activeStopId)
+    if (!stillThere) setActiveStopId(null)
+  }, [trip.stops, activeStopId])
+
+  const handleAddStop = () => {
+    setSelectedStopId(null)
+    addStop()
+  }
+
+  const handleActivateFromGraph = (id: string | null) => {
+    if (!id) { setActiveStopId(null); return }
+    setActiveStopId((prev) => (prev === id ? null : id))
+    const el = cardRefs.current[id]
+    if (el) el.scrollIntoView({ block: 'center', behavior: 'smooth' })
+  }
+
+  const handleResetTrip = () => {
+    setActiveStopId(null)
+    setSelectedStopId(null)
+    setTripField('stops', [])
+    setTripField('legs', [])
+  }
+
+  const confirmAndReset = () => {
+    if (window.confirm(t('reset.text'))) handleResetTrip()
+  }
+
+  return (
+    <div className="relative space-y-4" ref={wrapperRef}>
+      <SectionHeader
+        title={t('stops.header')}
+        action={
+          <EmojiButton
+            emoji="➕"
+            label={t('stops.add')}
+            title={t('stops.add')}
+            onClick={handleAddStop}
+            variant="btn"
+          />
+        }
+      />
+
+      {trip.stops.length > 0 && (
+        <StopsGraph
+          trip={trip}
+          wrapperRef={wrapperRef}
+          activeStopId={activeStopId}
+          onActivate={handleActivateFromGraph}
+          onReset={confirmAndReset}
+        />
+      )}
+
+      {trip.stops.length === 0 && (
+        <div className="rounded-2xl border border-dashed border-[var(--color-border)] p-6 text-center text-[var(--color-muted)]">
+          {t('stops.none')}
+        </div>
+      )}
+
+      {trip.stops.map((s, i) => {
+        if (!activeStopId || s.id !== activeStopId) return null
+
+        const nights = s.stayNights || 0
+        const b = s.budget || {}
+        const lodgingTotal =
+          typeof b.lodgingTotal === 'number'
+            ? b.lodgingTotal
+            : (b.lodgingPerNight || 0) * nights
+
+        const mounting = mountingId === s.id
+
+        return (
+          <div
+            key={s.id}
+            ref={setCardRef(s.id)}
+            className={
+              'rounded-2xl bg-white border border-[var(--color-border)] shadow-md ring-2 ring-[var(--color-brand)] ' +
+              'transition-opacity transition-transform duration-200 ease-out ' +
+              (mounting ? 'opacity-0 translate-y-1' : 'opacity-100 translate-y-0')
+            }
+          >
+            <div className="p-4 flex items-center gap-4">
+              <EmojiButton emoji="⬆️" label={t('stops.up')} title={t('stops.up')} onClick={() => moveStop(s.id, 'up')} variant="ghost" />
+              <EmojiButton emoji="⬇️" label={t('stops.down')} title={t('stops.down')} onClick={() => moveStop(s.id, 'down')} variant="ghost" />
+
+              <input
+                value={s.city}
+                onChange={(e) => setStopField(s.id, 'city', e.target.value)}
+                placeholder={t('stops.city.placeholder')}
+                className="flex-1 px-3 py-2 rounded-xl border border-[var(--color-border)] bg-white outline-none"
+              />
+
+              <label className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-[var(--color-border)] bg-white">
+                <span>{t('stops.stayNights')}</span>
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  min={0}
+                  value={s.stayNights}
+                  onFocus={(e) => e.currentTarget.select()}
+                  onChange={(e) => setStopField(s.id, 'stayNights', Number(e.target.value) || 0)}
+                  className="w-20 bg-transparent outline-none"
+                />
+              </label>
+
+              <EmojiButton
+                emoji="🧺"
+                label={t('stops.activities')}
+                title={t('stops.activities')}
+                onClick={() => setSelectedStopId(s.id)}
+                variant="btn"
+              />
+
+              <EmojiButton
+                emoji="🗑"
+                label={t('stops.delete')}
+                title={t('stops.delete')}
+                onClick={() => {
+                  deleteStop(s.id)
+                }}
+                variant="btn"
+                className="!bg-red-600 hover:!bg-red-700 border-red-600"
+              />
+            </div>
+
+            {i < trip.stops.length - 1 && (
+              <LegEditor
+                leg={trip.legs.find(
+                  (l) => l.fromStopId === s.id && l.toStopId === trip.stops[i + 1].id
+                )}
+                setLegField={setLegField}
+              />
+            )}
+
+            <div className="px-4 pb-4 text-sm text-neutral-600 flex flex-wrap gap-2">
+              <span className="tag">{t('stops.tag.activities')}: {s.activities.length}</span>
+              {lodgingTotal > 0 && <span className="tag">{t('stops.tag.lodging', { v: String(lodgingTotal) })}</span>}
+              {typeof b.foodPerDay === 'number' && b.foodPerDay > 0 && (
+                <span className="tag">{t('stops.tag.food', { v: String(b.foodPerDay) })}</span>
+              )}
+              {typeof b.other === 'number' && b.other > 0 && (
+                <span className="tag">{t('stops.tag.other', { v: String(b.other) })}</span>
+              )}
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
