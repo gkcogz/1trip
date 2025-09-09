@@ -110,13 +110,11 @@ a:hover{color:var(--color-brand-600)}
 }
 .card:hover{ box-shadow:var(--shadow-1-hover); transform: translateY(-1px); }
 
-/* Section title */
 .section-title{
   display:inline-block;
-  padding-bottom:.25rem;
-  border-bottom:3px solid var(--color-brand);
   color:var(--color-brand);
   font-weight:700;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.08);
 }
 
 /* Buttons */

@@ -1,6 +1,6 @@
 // src/components/LegEditor.tsx
 import React from 'react'
-import { Leg } from '@lib/types'
+import { Leg } from '../lib/types'
 import { ModeButton } from './ui'
 import { useI18n } from '../i18n'
 

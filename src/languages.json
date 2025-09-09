@@ -19,6 +19,7 @@
   "topbar.print": { "tr": "Yazdır", "en": "Print", "de": "Drucken" },
   "topbar.undo": { "tr": "Geri al", "en": "Undo", "de": "Rückgängig" },
   "topbar.redo": { "tr": "İleri al", "en": "Redo", "de": "Wiederholen" },
+  "topbar.importJSON": { "tr": "JSON İçe Aktar", "en": "Import JSON", "de": "JSON importieren" },
   "topbar.lang": { "tr": "Dil", "en": "Language", "de": "Sprache" },
   "topbar.lang.tr": { "tr": "Türkçe", "en": "Turkish", "de": "Türkisch" },
   "topbar.lang.en": { "tr": "İngilizce", "en": "English", "de": "Englisch" },
@@ -122,20 +123,20 @@
   "print.unknown": { "tr": "Bilinmiyor", "en": "Unknown", "de": "Unbekannt" },
   
   "planner.motto": {
-  "tr": "Tek ekranda planla.",
-  "en": "Plan it all on one screen.",
-  "de": "Alles auf einem Bildschirm planen."  },
+    "tr": "Tek ekranda planla.",
+    "en": "Plan it all on one screen.",
+    "de": "Alles auf einem Bildschirm planen."
+  },
 
   "planner.newActivity": {
     "tr": "Yeni Aktivite",
     "en": "New Activity",
     "de": "Neue Aktivität"
-    },
+  },
     
   "planner.jsonError": {
     "tr": "JSON okunamadı",
     "en": "Could not read JSON",
     "de": "JSON konnte nicht gelesen werden"
-    }
-
+  }
 }

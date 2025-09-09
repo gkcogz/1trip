@@ -21,7 +21,15 @@ export default function Contact() {
   return (
     <main className="mx-auto max-w-5xl p-6 text-[var(--color-ink)]">
       <div className="card p-8">
-        <h1 className="section-title text-3xl mb-6">Contact</h1>
+        {/* Header with favicon */}
+        <div className="flex items-center gap-3 mb-6">
+          <img
+            src="/favicon.png"
+            alt="OneTrip logo"
+            className="w-10 h-10 rounded-lg shadow-md"
+          />
+          <h1 className="section-title text-3xl">Contact</h1>
+        </div>
 
         <p className="text-[var(--color-muted)] leading-relaxed mb-8">
           <span className="mr-2">💌</span>

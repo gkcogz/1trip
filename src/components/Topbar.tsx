@@ -1,9 +1,9 @@
 // src/components/Topbar.tsx
 import { useRef, useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
-import type { Trip } from '../lib/types'
-import { toCSV } from '../lib/csv'
-import { hashEncode } from '../lib/storage'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
+import type { Trip } from '@lib/types'
+import { toCSV } from '@lib/csv'
+import { hashEncode } from '@lib/storage'
 import ShareModal from './ShareModal'
 import { useI18n } from '../i18n'
 
@@ -30,6 +30,9 @@ export default function Topbar({
   const menuRef = useRef<HTMLDivElement>(null)
 
   const hasPlannerControls = !!trip && !!setTripField
+
+  const navigate = useNavigate()
+  const location = useLocation()
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -58,7 +61,7 @@ export default function Topbar({
       try {
         await navigator.share({ title, text, url })
         return
-      } catch { /* cancelled */ }
+      } catch { /* cancelled or unsupported */ }
     }
     setShowShare(true)
   }
@@ -81,7 +84,9 @@ export default function Topbar({
     a.click()
   }
 
-  const printPage = () => window.print()
+  const handleGeneratePDF = () => {
+    navigate("/print", { state: { from: location.pathname } })
+  }
 
   const travelerEmoji = (n: number) => {
     if (n === 1) return '👤'
@@ -94,10 +99,9 @@ export default function Topbar({
   return (
     <header className="sticky top-0 z-40 backdrop-blur bg-[var(--color-bg)]/85 border-b border-[var(--color-border)] shadow-sm print:hidden">
       <div className="mx-auto max-w-7xl px-4 py-3 flex items-center justify-between gap-3">
-        
+
         {/* LEFT: Hamburger + planner inputs */}
         <div className="flex items-center gap-3 min-w-0">
-          {/* Hamburger */}
           <div className="relative" ref={menuRef}>
             <button
               className="flex flex-col justify-center items-center w-9 h-9 rounded-md border border-[var(--color-border)] bg-white hover:bg-gray-100"
@@ -112,17 +116,24 @@ export default function Topbar({
 
             {menuOpen && (
               <div className="absolute left-0 top-11 w-44 rounded-md border border-[var(--color-border)] bg-white shadow-md">
-                <Link to="/about" className="block px-4 py-2 hover:bg-gray-100" onClick={() => setMenuOpen(false)}>
+                <Link
+                  to="/about"
+                  className="block px-4 py-2 hover:bg-gray-100"
+                  onClick={() => setMenuOpen(false)}
+                >
                   {t('menu.about')}
                 </Link>
-                <Link to="/contact" className="block px-4 py-2 hover:bg-gray-100" onClick={() => setMenuOpen(false)}>
+                <Link
+                  to="/contact"
+                  className="block px-4 py-2 hover:bg-gray-100"
+                  onClick={() => setMenuOpen(false)}
+                >
                   {t('menu.contact')}
                 </Link>
               </div>
             )}
           </div>
 
-          {/* Planner inputs */}
           {hasPlannerControls && (
             <>
               <input
@@ -131,7 +142,6 @@ export default function Topbar({
                 value={trip!.title}
                 onChange={(e) => setTripField!('title', e.target.value)}
               />
-
               <select
                 value={trip!.currency}
                 onChange={(e) => setTripField!('currency', e.target.value)}
@@ -142,7 +152,6 @@ export default function Topbar({
                 <option>TRY</option>
                 <option>GBP</option>
               </select>
-
               <label className="flex items-center gap-3 px-2 py-2 rounded-xl border border-[var(--color-border)] bg-white">
                 <span>{t('topbar.people')}</span>
                 <input
@@ -154,7 +163,7 @@ export default function Topbar({
                   className="w-32 accent-[var(--color-brand)]"
                 />
                 <span className="font-medium text-[var(--color-accent)]">{trip!.participants}</span>
-                <span className="text-xl" aria-hidden>{travelerEmoji(trip?.participants ?? 1)}</span>
+                <span className="text-xl">{travelerEmoji(trip!.participants)}</span>
               </label>
             </>
           )}
@@ -163,7 +172,11 @@ export default function Topbar({
         {/* CENTER: Logo */}
         <div className="flex-shrink-0">
           <Link to="/" title="Home">
-            <img src={trip?.logoDataUrl || '/logo.png'} alt="logo" className="h-12 w-12 rounded-full shadow-sm" />
+            <img
+              src={trip?.logoDataUrl || '/logo.png'}
+              alt="logo"
+              className="h-12 w-12 rounded-full shadow-sm"
+            />
           </Link>
         </div>
 
@@ -172,43 +185,49 @@ export default function Topbar({
           <button
             className="px-3 py-2 rounded-xl border border-[var(--color-border)] bg-white"
             onClick={share}
+            title={t('topbar.actions.share')}
           >
             {t('topbar.actions.share')}
           </button>
 
-          {/* Language picker with flags */}
-          <select
-            value={lang}
-            onChange={(e) => setLang(e.target.value as any)}
-            className="px-2 py-2 rounded-xl border border-[var(--color-border)] bg-white text-lg"
-            aria-label={t('topbar.lang')}
-          >
-            <option value="tr">🇹🇷</option>
-            <option value="en">🇬🇧</option>
-            <option value="de">🇩🇪</option>
-          </select>
+          {/* Language Selector - minimal flags only */}
+          <label className="px-2 py-2 rounded-xl border border-[var(--color-border)] bg-white flex items-center gap-2">
+            <span>🌐</span>
+            <select
+              value={lang}
+              onChange={(e) => setLang(e.target.value as any)}
+              className="bg-transparent outline-none"
+            >
+              <option value="tr">🇹🇷</option>
+              <option value="en">🇬🇧</option>
+              <option value="de">🇩🇪</option>
+            </select>
+          </label>
 
-          {/* Planner-only tools */}
           {hasPlannerControls && (
             <nav className="toolbar flex items-center gap-2">
               <div className="segment">
-                <button onClick={exportJSON} className="px-2 py-1 rounded-md border">🧾</button>
-                <button onClick={exportCSV} className="px-2 py-1 rounded-md border">📊</button>
-                <button onClick={printPage} className="px-2 py-1 rounded-md border">🖨️</button>
+                <button onClick={exportJSON} className="px-2 py-1 rounded-md border" title={t('topbar.exportJSON')}>🧾</button>
+                <button onClick={exportCSV} className="px-2 py-1 rounded-md border" title={t('topbar.exportCSV')}>📊</button>
+                <button onClick={handleGeneratePDF} className="px-2 py-1 rounded-md border" title={t('topbar.print')}>🖨️</button>
               </div>
               <div className="segment">
-                <button onClick={onUndo} className="px-2 py-1 rounded-md border">↩️</button>
-                <button onClick={onRedo} className="px-2 py-1 rounded-md border">↪️</button>
+                <button onClick={onUndo} className="px-2 py-1 rounded-md border" title={t('topbar.undo')}>↩️</button>
+                <button onClick={onRedo} className="px-2 py-1 rounded-md border" title={t('topbar.redo')}>↪️</button>
               </div>
               <div className="segment">
-                <input ref={fileRef} type="file" accept="application/json" className="hidden"
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept="application/json"
+                  className="hidden"
                   onChange={(e) => {
                     const f = e.currentTarget.files?.[0]
                     if (f && onImportJSON) onImportJSON(f)
                     e.currentTarget.value = ''
                   }}
                 />
-                <button onClick={() => fileRef.current?.click()} className="px-2 py-1 rounded-md border">📥</button>
+                <button onClick={() => fileRef.current?.click()} className="px-2 py-1 rounded-md border" title={t('topbar.importJSON') || 'Import JSON'}>📥</button>
               </div>
             </nav>
           )}

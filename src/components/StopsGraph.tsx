@@ -6,10 +6,11 @@ import { useI18n } from '../i18n'
 
 type Props = {
   trip: Trip
-  wrapperRef: React.RefObject<HTMLDivElement>
-  activeStopId: string | null
-  onActivate: (id: string | null, fromPos?: { x: number; y: number }) => void
+  wrapperRef?: React.RefObject<HTMLDivElement> | null
+  activeStopId?: string | null
+  onActivate?: (id: string | null, fromPos?: { x: number; y: number }) => void
   onReset?: () => void
+  printSafe?: boolean
 }
 
 const modeIcon = (mode?: string) => {
@@ -23,7 +24,7 @@ const modeIcon = (mode?: string) => {
 }
 
 export default function StopsGraph({
-  trip, wrapperRef, activeStopId, onActivate, onReset
+  trip, wrapperRef, activeStopId, onActivate, onReset, printSafe = false
 }: Props) {
   const { t } = useI18n()
   const stops = trip.stops ?? []
@@ -45,11 +46,9 @@ export default function StopsGraph({
   const graphRef = useRef<HTMLDivElement>(null)
 
   const handleNodeClick = (index: number) => {
+    if (printSafe) return // disable clicks in print mode
     const id = stops[index].id
-    if (!graphRef.current || !wrapperRef.current) {
-      onActivate(activeStopId === id ? null : id)
-      return
-    }
+    if (!graphRef.current || !wrapperRef?.current || !onActivate) return
     const g = graphRef.current.getBoundingClientRect()
     const w = wrapperRef.current.getBoundingClientRect()
     const cx = g.left - w.left + (xs[index] / 100) * g.width
@@ -62,23 +61,30 @@ export default function StopsGraph({
   const SEG_STROKE = 4
 
   return (
-    <div className="relative rounded-2xl bg-white border border-[var(--color-border)] shadow-sm p-4 overflow-visible">
-      {/* Header + Reset */}
-      <div className="flex items-center justify-between mb-3">
-        <div className="text-sm font-medium text-[var(--color-accent)]">{t('graph.header')}</div>
-        {onReset && (
-          <EmojiButton
-            emoji="🗑️"
-            label={t('common.reset')}
-            title={t('graph.reset')}
-            onClick={() => onReset()}
-            variant="btn"
-            className="!bg-red-600 hover:!bg-red-700 border-red-600 text-white px-3 py-1 rounded-lg"
-          />
-        )}
-      </div>
+    <div
+      className={`relative rounded-2xl border border-[var(--color-border)] shadow-sm p-4 overflow-visible ${
+        printSafe ? 'bg-transparent' : 'bg-white'
+      }`}
+      ref={graphRef}
+    >
+      {/* Header (skip in printSafe) */}
+      {!printSafe && (
+        <div className="flex items-center justify-between mb-3">
+          <div className="text-sm font-medium text-[var(--color-accent)]">{t('graph.header')}</div>
+          {onReset && (
+            <EmojiButton
+              emoji="🗑️"
+              label={t('common.reset')}
+              title={t('graph.reset')}
+              onClick={() => onReset()}
+              variant="btn"
+              className="!bg-red-600 hover:!bg-red-700 border-red-600 text-white px-3 py-1 rounded-lg"
+            />
+          )}
+        </div>
+      )}
 
-      <div className="relative w-full h-16" ref={graphRef}>
+      <div className="relative w-full h-16">
         {/* Base line */}
         <svg viewBox="0 0 100 100" className="absolute inset-0 w-full h-full" preserveAspectRatio="none">
           {n >= 2 && (
@@ -116,43 +122,21 @@ export default function StopsGraph({
         })}
 
         {/* Stop nodes */}
-        {stops.map((s, i) => {
-          const isActive = activeStopId === s.id
-          return (
-            <button
-              key={s.id}
-              type="button"
-              title={s.city || `Stop ${i + 1}`}
-              onClick={() => handleNodeClick(i)}
-              className="absolute -translate-x-1/2 -translate-y-1/2 flex flex-col items-center group"
-              style={{ left: `${xs[i]}%`, top: '50%' }}
-            >
-              <span
-                className={
-                  'w-9 h-9 rounded-full border-2 flex items-center justify-center transition-all ' +
-                  (isActive
-                    ? 'bg-white border-[var(--color-brand)] shadow'
-                    : 'bg-white border-neutral-300 opacity-90 group-hover:opacity-100')
-                }
-              >
-                <span
-                  className={
-                    'inline-block rounded-full w-3.5 h-3.5 ' +
-                    (isActive ? 'bg-[var(--color-brand)]' : 'bg-neutral-300')
-                  }
-                />
-              </span>
-              <span
-                className={
-                  'mt-2 text-[11px] leading-tight max-w-[120px] text-center truncate ' +
-                  (isActive ? 'text-[var(--color-accent)]' : 'text-neutral-500')
-                }
-              >
-                {s.city || `Stop ${i + 1}`}
-              </span>
-            </button>
-          )
-        })}
+        {stops.map((s, i) => (
+          <div
+            key={s.id}
+            className="absolute -translate-x-1/2 -translate-y-1/2 flex flex-col items-center"
+            style={{ left: `${xs[i]}%`, top: '50%' }}
+            onClick={() => handleNodeClick(i)}
+          >
+            <span className="w-9 h-9 rounded-full border-2 flex items-center justify-center bg-white border-[var(--color-brand)]">
+              <span className="inline-block rounded-full w-3.5 h-3.5 bg-[var(--color-brand)]" />
+            </span>
+            <span className="mt-2 text-[11px] leading-tight max-w-[120px] text-center truncate text-[var(--color-accent)]">
+              {s.city || `Stop ${i + 1}`}
+            </span>
+          </div>
+        ))}
       </div>
     </div>
   )

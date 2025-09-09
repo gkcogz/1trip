@@ -2,14 +2,13 @@
 import React, { useMemo } from 'react'
 import type { Trip } from '../lib/types'
 import StopsGraph from './StopsGraph'
-import { useI18n } from '../i18n' // ← i18n entegrasyonu
+import { useI18n } from '../i18n'
 
 function money(n: number | undefined, currency: string) {
   const v = typeof n === 'number' ? n : 0
   try {
     return new Intl.NumberFormat(undefined, { style: 'currency', currency }).format(v)
   } catch {
-    // Para birimi desteklenmiyorsa yine de okunur bir çıktı ver
     return `${v.toFixed(2)} ${currency}`
   }
 }
@@ -54,7 +53,6 @@ export default function PrintSheet({ trip }: { trip: Trip }) {
             {trip.title || t('print.title.fallback')}
           </h1>
           <div className="print-sub">
-            {/* “{n} traveler(s) • Currency: {CUR}” */}
             {t('print.header.line', {
               n: participants,
               travelers: participants > 1 ? t('print.travelers.plural') : t('print.travelers.singular'),
@@ -68,14 +66,9 @@ export default function PrintSheet({ trip }: { trip: Trip }) {
       {/* Route overview */}
       {stops.length > 0 && (
         <section className="print-section">
-          {/* graph.header zaten languages.json’da mevcut */}
           <h2 className="print-h2">{t('graph.header')}</h2>
-          <StopsGraph
-            trip={trip}
-            wrapperRef={{ current: null }}
-            activeStopId={null}
-            onActivate={() => {}}
-          />
+          {/* Print-safe graph (no interactivity) */}
+          <StopsGraph trip={trip} printSafe />
         </section>
       )}
 
@@ -92,7 +85,6 @@ export default function PrintSheet({ trip }: { trip: Trip }) {
                     {s.city || t('print.stopPlaceholder', { i: i + 1 })}
                   </div>
                   <div className="print-stop-sub">
-                    {/* “Nights: X • Subtotal: Y” */}
                     {t('print.nightsSubtotal', {
                       nights: p.nights,
                       subtotal: money(p.subtotal, currency)

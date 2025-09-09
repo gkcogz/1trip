@@ -2,7 +2,6 @@
 import { useRef, useState } from 'react'
 import type { Trip } from '../lib/types'
 import { uid, clamp } from '../lib/utils'
-import Topbar from '../components/Topbar'
 import BudgetPanel from '../components/BudgetPanel'
 import StopsTimeline from '../components/StopsTimeline'
 import StopSidebar from '../components/StopSidebar'
@@ -212,26 +211,7 @@ export default function Planner({ trip, setTrip }: PlannerProps) {
 
   return (
     <div className="min-h-screen text-[var(--color-ink)]">
-      <Topbar
-        trip={trip}
-        setTripField={setTripField}
-        onUndo={undo}
-        onRedo={redo}
-        onImportJSON={(f) => {
-          const r = new FileReader()
-          r.onload = () => {
-            try {
-              const parsed = JSON.parse(String(r.result))
-              setTrip(parsed)
-            } catch {
-              alert(t('planner.jsonError'))
-            }
-          }
-          r.readAsText(f)
-        }}
-      />
-
-      {/* Planner UI */}
+      {/* Planner UI (Topbar is now only in App.tsx) */}
       <div className="mx-auto max-w-7xl p-4 grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-4 print:hidden">
         <div className="space-y-4">
           <StopsTimeline
