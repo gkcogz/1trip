@@ -1,6 +1,6 @@
 // src/components/StopsGraph.tsx
 import React, { useMemo, useRef } from 'react'
-import { Trip } from '@lib/types'
+import { Trip } from '../lib/types'
 import { EmojiButton } from './ui'
 import { useI18n } from '../i18n'
 

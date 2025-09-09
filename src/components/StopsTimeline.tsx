@@ -1,6 +1,6 @@
 // src/components/StopsTimeline.tsx
 import { useEffect, useRef, useState } from 'react'
-import { Trip } from '@lib/types'
+import { Trip } from '../lib/types'
 import SectionHeader from './SectionHeader'
 import LegEditor from './LegEditor'
 import StopsGraph from './StopsGraph'

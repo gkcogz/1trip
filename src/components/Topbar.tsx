@@ -1,9 +1,9 @@
 // src/components/Topbar.tsx
 import { useRef, useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import type { Trip } from '@lib/types'
-import { toCSV } from '@lib/csv'
-import { hashEncode } from '@lib/storage'
+import type { Trip } from '../lib/types'
+import { toCSV } from '../lib/csv'
+import { hashEncode } from '../lib/storage'
 import ShareModal from './ShareModal'
 import { useI18n } from '../i18n'
 
@@ -154,7 +154,7 @@ export default function Topbar({
                   className="w-32 accent-[var(--color-brand)]"
                 />
                 <span className="font-medium text-[var(--color-accent)]">{trip!.participants}</span>
-                <span className="text-xl" aria-hidden>{travelerEmoji(trip!.participants)}</span>
+                <span className="text-xl" aria-hidden>{travelerEmoji(trip?.participants ?? 1)}</span>
               </label>
             </>
           )}

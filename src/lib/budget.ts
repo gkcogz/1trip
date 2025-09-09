@@ -1,25 +1,60 @@
-import type { Trip, TripBudgetBreakdown } from './types'
+// src/lib/budget.ts
+import type { Trip } from './types'
 
-export function computeBudget(trip: Trip): TripBudgetBreakdown {
-  const transport = trip.legs.reduce((s, l) => s + (Number(l.cost) || 0), 0)
+export interface BudgetResult {
+  transport: number
+  lodging: number
+  food: number
+  activities: number
+  other: number
+  total: number
+}
 
-  const lodging = trip.stops.reduce(
-    (s, st) => s + (Number(st.budget?.lodgingPerNight) || 0) * (Number(st.stayNights) || 0),
+/**
+ * Compute budget breakdown for a given trip.
+ * Includes transport, lodging, food, activities, and other costs.
+ */
+export function computeBudget(trip: Trip): BudgetResult {
+  const transport = (trip.legs ?? []).reduce(
+    (sum, leg) => sum + (Number(leg?.cost) || 0),
     0
   )
 
-  const food = trip.stops.reduce(
-    (s, st) => s + (Number(st.budget?.foodPerDay) || 0) * (Number(st.stayNights) || 0),
-    0
-  )
+  const lodging = (trip.stops ?? []).reduce((sum, st) => {
+    const nights = Number(st.stayNights) || 0
+    const budget = st.budget || {}
 
-  const activities = trip.stops.reduce(
-    (s, st) => s + st.activities.reduce((a, ac) => a + (Number(ac.cost) || 0), 0),
-    0
-  )
+    // lodgingTotal override, otherwise lodgingPerNight * nights
+    const lodgingCost =
+      typeof budget.lodgingTotal === 'number'
+        ? budget.lodgingTotal
+        : (Number(budget.lodgingPerNight) || 0) * nights
 
-  const other = trip.stops.reduce((s, st) => s + (Number(st.budget?.other) || 0), 0)
+    return sum + lodgingCost
+  }, 0)
+
+  const food = (trip.stops ?? []).reduce((sum, st) => {
+    const nights = Number(st.stayNights) || 0
+    const budget = st.budget || {}
+    const foodPerDay = Number(budget.foodPerDay) || 0
+    return sum + foodPerDay * nights
+  }, 0)
+
+  const activities = (trip.stops ?? []).reduce((sum, st) => {
+    return (
+      sum +
+      (st.activities ?? []).reduce(
+        (aSum, ac) => aSum + (Number(ac?.cost) || 0),
+        0
+      )
+    )
+  }, 0)
+
+  const other = (trip.stops ?? []).reduce((sum, st) => {
+    return sum + (Number(st.budget?.other) || 0)
+  }, 0)
 
   const total = transport + lodging + food + activities + other
+
   return { transport, lodging, food, activities, other, total }
 }

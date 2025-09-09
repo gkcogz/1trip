@@ -1,5 +1,5 @@
 // src/components/StopSidebar.tsx
-import { Trip } from '@lib/types'
+import { Trip } from '../lib/types'
 import { Field, EmojiButton } from './ui'
 import { useI18n } from '../i18n'
 

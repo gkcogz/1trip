@@ -1,6 +1,6 @@
 // src/components/BudgetPanel.tsx
-import { Trip, TripBudgetBreakdown } from '@lib/types'
-import { currencyFmt } from '@lib/utils'
+import { Trip, TripBudgetBreakdown } from '../lib/types'
+import { currencyFmt } from '../lib/utils'
 import { useI18n } from '../i18n'
 
 type Props = {

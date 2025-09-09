@@ -1,6 +1,10 @@
+// src/lib/types.ts
+
+// --- Primitive types ---
 export type TransportMode = 'plane' | 'train' | 'bus' | 'car'
 export type ActivityCategory = 'nature' | 'food' | 'culture' | 'nightlife' | 'other'
 
+// --- Activity ---
 export interface Activity {
   id: string
   title: string
@@ -10,12 +14,15 @@ export interface Activity {
   timeTag?: string
 }
 
+// --- Stop Budget ---
 export interface StopBudget {
   lodgingPerNight?: number
+  lodgingTotal?: number   // 🔹 hesaplama kolaylığı için eklendi
   foodPerDay?: number
   other?: number
 }
 
+// --- Stop ---
 export interface Stop {
   id: string
   city: string
@@ -25,15 +32,17 @@ export interface Stop {
   budget: StopBudget
 }
 
-export interface TransportLeg {
+// --- Leg ---
+export interface Leg {
   id: string
   fromStopId: string
   toStopId: string
-  mode: TransportMode
+  mode?: TransportMode
   cost?: number
   durationHours?: number
 }
 
+// --- Budget breakdown ---
 export interface TripBudgetBreakdown {
   transport: number
   lodging: number
@@ -43,15 +52,16 @@ export interface TripBudgetBreakdown {
   total: number
 }
 
+// --- Trip ---
 export interface Trip {
   id: string
-  ownerId: string
-  title: string
-  currency: string
-  participants: number
+  ownerId?: string         // opsiyonel yaptık: bazı yerlerde yok
+  title?: string
+  currency?: string
+  participants?: number
   stops: Stop[]
-  legs: TransportLeg[]
-  createdAt: number
-  updatedAt: number
+  legs: Leg[]
+  createdAt?: number
+  updatedAt?: number
   logoDataUrl?: string
 }
