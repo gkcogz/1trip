@@ -1,11 +1,12 @@
 // src/components/StopsTimeline.tsx
 import { useEffect, useRef, useState } from 'react'
-import { Trip } from '../lib/types'
+import { Trip } from '@lib/types'
 import SectionHeader from './SectionHeader'
 import LegEditor from './LegEditor'
 import StopsGraph from './StopsGraph'
 import { EmojiButton } from './ui'
 import { useI18n } from '../i18n'
+import ResetModal from './ResetModal'
 
 export default function StopsTimeline({
   trip,
@@ -29,6 +30,7 @@ export default function StopsTimeline({
   const { t } = useI18n()
   const [activeStopId, setActiveStopId] = useState<string | null>(null)
   const [mountingId, setMountingId] = useState<string | null>(null)
+  const [resetOpen, setResetOpen] = useState(false)
 
   const wrapperRef = useRef<HTMLDivElement>(null)
   const cardRefs = useRef<Record<string, HTMLDivElement | null>>({})
@@ -82,10 +84,6 @@ export default function StopsTimeline({
     setTripField('legs', [])
   }
 
-  const confirmAndReset = () => {
-    if (window.confirm(t('reset.text'))) handleResetTrip()
-  }
-
   return (
     <div className="relative space-y-4" ref={wrapperRef}>
       <SectionHeader
@@ -107,7 +105,7 @@ export default function StopsTimeline({
           wrapperRef={wrapperRef}
           activeStopId={activeStopId}
           onActivate={handleActivateFromGraph}
-          onReset={confirmAndReset}
+          onReset={() => setResetOpen(true)}
         />
       )}
 
@@ -205,6 +203,13 @@ export default function StopsTimeline({
           </div>
         )
       })}
+
+      {/* Reset confirmation modal */}
+      <ResetModal
+        open={resetOpen}
+        onClose={() => setResetOpen(false)}
+        onConfirm={handleResetTrip}
+      />
     </div>
   )
 }

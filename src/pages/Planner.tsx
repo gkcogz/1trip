@@ -5,6 +5,7 @@ import { uid, clamp } from '../lib/utils'
 import BudgetPanel from '../components/BudgetPanel'
 import StopsTimeline from '../components/StopsTimeline'
 import StopSidebar from '../components/StopSidebar'
+import ResetModal from '../components/ResetModal'
 import { useI18n } from '../i18n'
 
 type PlannerProps = {
@@ -15,6 +16,11 @@ type PlannerProps = {
 export default function Planner({ trip, setTrip }: PlannerProps) {
   const { t } = useI18n()
   const [selectedStopId, setSelectedStopId] = useState<string | null>(null)
+
+  // --- reset modal state ---
+  const [showReset, setShowReset] = useState(false)
+  const openReset = () => setShowReset(true)
+  const closeReset = () => setShowReset(false)
 
   // --- history stacks ---
   const undoStack = useRef<Trip[]>([])
@@ -171,12 +177,7 @@ export default function Planner({ trip, setTrip }: PlannerProps) {
       return { ...trip, stops, updatedAt: Date.now() }
     })
 
-  const setActivityField = (
-    stopId: string,
-    actId: string,
-    field: any,
-    value: any,
-  ) =>
+  const setActivityField = (stopId: string, actId: string, field: any, value: any) =>
     setTripWithHistory((trip) => {
       const stops = trip.stops.map((s) =>
         s.id !== stopId
@@ -209,6 +210,21 @@ export default function Planner({ trip, setTrip }: PlannerProps) {
       return { ...trip, stops, updatedAt: Date.now() }
     })
 
+  // --- reset all handler (called from the modal) ---
+  const confirmResetAll = () => {
+    setTripWithHistory((t0) => ({
+      ...t0,
+      title: '',
+      stops: [],
+      legs: [],
+      // keep currency/participants if you want; or reset to defaults:
+      // currency: 'EUR',
+      participants: Math.max(1, Number(t0.participants) || 1),
+      updatedAt: Date.now(),
+    }))
+    setSelectedStopId(null)
+  }
+
   return (
     <div className="min-h-screen text-[var(--color-ink)]">
       {/* Planner UI (Topbar is now only in App.tsx) */}
@@ -223,6 +239,8 @@ export default function Planner({ trip, setTrip }: PlannerProps) {
             moveStop={moveStop}
             setLegField={setLegField}
             setTripField={setTripField}
+            // NEW: ask parent to open custom reset modal
+            onRequestResetAll={openReset}
           />
         </div>
 
@@ -248,6 +266,13 @@ export default function Planner({ trip, setTrip }: PlannerProps) {
           © {new Date().getFullYear()} OneTrip — {t('planner.motto')}
         </div>
       </footer>
+
+      {/* Custom Reset Modal */}
+      <ResetModal
+        open={showReset}
+        onClose={closeReset}
+        onConfirm={confirmResetAll}
+      />
     </div>
   )
 }
