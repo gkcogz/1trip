@@ -1,4 +1,3 @@
-// src/components/Topbar.tsx
 import { useRef, useState, useEffect } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import type { Trip } from '@lib/types'
@@ -32,7 +31,7 @@ export default function Topbar({
   const hasPlannerControls = !!trip && !!setTripField
 
   const navigate = useNavigate()
-  const location = useLocation()
+  const routeLocation = useLocation()
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -49,9 +48,11 @@ export default function Topbar({
     }
   }, [])
 
+  // Build share URL with browser location (react-router's location doesn't have origin/href)
   const shareUrl = () =>
-    trip ? location.origin + location.pathname + `#plan=${hashEncode(trip)}`
-         : location.href
+    trip
+      ? `${window.location.origin}${window.location.pathname}#plan=${hashEncode(trip)}`
+      : window.location.href
 
   const share = async () => {
     const url = shareUrl()
@@ -85,7 +86,7 @@ export default function Topbar({
   }
 
   const handleGeneratePDF = () => {
-    navigate("/print", { state: { from: location.pathname } })
+    navigate('/print', { state: { from: routeLocation.pathname } })
   }
 
   const travelerEmoji = (n: number) => {
@@ -158,12 +159,16 @@ export default function Topbar({
                   type="range"
                   min={1}
                   max={10}
-                  value={trip!.participants}
+                  value={Number(trip!.participants ?? 1)}
                   onChange={(e) => setTripField!('participants', Number(e.target.value))}
                   className="w-32 accent-[var(--color-brand)]"
                 />
-                <span className="font-medium text-[var(--color-accent)]">{trip!.participants}</span>
-                <span className="text-xl">{travelerEmoji(trip!.participants)}</span>
+                <span className="font-medium text-[var(--color-accent)]">
+                  {Number(trip!.participants ?? 1)}
+                </span>
+                <span className="text-xl">
+                  {travelerEmoji(Number(trip?.participants ?? 1))}
+                </span>
               </label>
             </>
           )}
@@ -227,7 +232,13 @@ export default function Topbar({
                     e.currentTarget.value = ''
                   }}
                 />
-                <button onClick={() => fileRef.current?.click()} className="px-2 py-1 rounded-md border" title={t('topbar.importJSON') || 'Import JSON'}>📥</button>
+                <button
+                  onClick={() => fileRef.current?.click()}
+                  className="px-2 py-1 rounded-md border"
+                  title={t('topbar.importJSON') || 'Import JSON'}
+                >
+                  📥
+                </button>
               </div>
             </nav>
           )}
