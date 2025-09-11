@@ -32,7 +32,7 @@ export default function Topbar({
   const hasPlannerControls = !!trip && !!setTripField
 
   const navigate = useNavigate()
-  const routeLocation = useLocation() // keep for router navigation, but not for origin/href
+  const routeLocation = useLocation()
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -49,7 +49,7 @@ export default function Topbar({
     }
   }, [])
 
-  // Use the browser location for share URL
+  // URL oluştur
   const shareUrl = () =>
     trip
       ? `${window.location.origin}${window.location.pathname}#plan=${hashEncode(trip)}`
@@ -86,8 +86,10 @@ export default function Topbar({
     a.click()
   }
 
+  // ✅ Print butonu artık /print route’una trip state ile gidiyor
   const handleGeneratePDF = () => {
-    navigate('/print', { state: { from: routeLocation.pathname } })
+    if (!trip) return
+    navigate('/print', { state: { trip, from: routeLocation.pathname } })
   }
 
   const travelerEmoji = (n: number) => {
@@ -117,12 +119,20 @@ export default function Topbar({
 
             {menuOpen && (
               <div className="absolute left-0 top-11 w-44 rounded-md border border-[var(--color-border)] bg-white shadow-md">
+                <Link
+                  to="/blog"
+                  className="block px-4 py-2 hover:bg-gray-100"
+                  onClick={() => setMenuOpen(false)}
+                >
+                  {t('menu.blog')}
+                </Link>
                 <Link to="/about" className="block px-4 py-2 hover:bg-gray-100" onClick={() => setMenuOpen(false)}>
                   {t('menu.about')}
                 </Link>
                 <Link to="/contact" className="block px-4 py-2 hover:bg-gray-100" onClick={() => setMenuOpen(false)}>
                   {t('menu.contact')}
                 </Link>
+
               </div>
             )}
           </div>
@@ -175,7 +185,7 @@ export default function Topbar({
             {t('topbar.actions.share')}
           </button>
 
-          {/* Language Selector - minimal flags only */}
+          {/* Language Selector */}
           <label className="px-2 py-2 rounded-xl border border-[var(--color-border)] bg-white flex items-center gap-2">
             <span>🌐</span>
             <select value={lang} onChange={(e) => setLang(e.target.value as any)} className="bg-transparent outline-none">

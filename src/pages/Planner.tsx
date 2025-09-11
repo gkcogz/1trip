@@ -1,37 +1,62 @@
 // src/pages/Planner.tsx
-import { useRef, useState } from 'react'
-import type { Trip } from '../lib/types'
-import { uid, clamp } from '../lib/utils'
-import BudgetPanel from '../components/BudgetPanel'
-import StopsTimeline from '../components/StopsTimeline'
-import StopSidebar from '../components/StopSidebar'
-import ResetModal from '../components/ResetModal'
-import { useI18n } from '../i18n'
+import { useRef, useState, useEffect } from "react"
+import { useLocation } from "react-router-dom"
+import type { Trip } from "../lib/types"
+import { uid, clamp } from "../lib/utils"
+import BudgetPanel from "../components/BudgetPanel"
+import StopsTimeline from "../components/StopsTimeline"
+import StopSidebar from "../components/StopSidebar"
+import { useI18n } from "../i18n"
+import Topbar from "../components/Topbar"
+import PrintSheet from "../components/PrintSheet"
 
-type PlannerProps = {
-  trip: Trip
-  setTrip: (next: Trip | ((trip: Trip) => Trip)) => void
+const STORAGE_KEY = "onetrip_saved_trip"
+const HISTORY_LIMIT = 60
+
+function loadTrip(initial: Trip): Trip {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY)
+    return raw ? JSON.parse(raw) : initial
+  } catch {
+    return initial
+  }
 }
 
-export default function Planner({ trip, setTrip }: PlannerProps) {
-  const { t } = useI18n()
-  const [selectedStopId, setSelectedStopId] = useState<string | null>(null)
+export default function PlannerWrapper({ printMode = false }: { printMode?: boolean }) {
+  const defaultTrip: Trip = {
+    id: "trip_" + uid(),
+    title: "",
+    currency: "EUR",
+    participants: 1,
+    stops: [],
+    legs: [],
+    updatedAt: Date.now(),
+    ownerId: "local",
+    createdAt: Date.now(),
+  }
 
-  // --- reset modal state ---
-  const [showReset, setShowReset] = useState(false)
-  const openReset = () => setShowReset(true)
-  const closeReset = () => setShowReset(false)
+  const location = useLocation()
+  const passedTrip = (location.state as any)?.trip
+
+  const [trip, setTrip] = useState<Trip>(() =>
+    passedTrip ? passedTrip : loadTrip(defaultTrip)
+  )
+
+  // her değişiklikte localStorage’a yaz
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(trip))
+    } catch {}
+  }, [trip])
 
   // --- history stacks ---
   const undoStack = useRef<Trip[]>([])
   const redoStack = useRef<Trip[]>([])
-  const HISTORY_LIMIT = 60
 
-  // history-aware setter
   const setTripWithHistory = (next: Trip | ((trip: Trip) => Trip)) => {
-    setTrip((prev) => {
+    setTrip(prev => {
       const value =
-        typeof next === 'function' ? (next as (trip: Trip) => Trip)(prev) : next
+        typeof next === "function" ? (next as (trip: Trip) => Trip)(prev) : next
       undoStack.current.push(prev)
       if (undoStack.current.length > HISTORY_LIMIT) undoStack.current.shift()
       redoStack.current = []
@@ -40,39 +65,86 @@ export default function Planner({ trip, setTrip }: PlannerProps) {
   }
 
   const undo = () => {
-    if (undoStack.current.length === 0) return
-    setTrip((curr) => {
+    if (!undoStack.current.length) return
+    setTrip(curr => {
       const prev = undoStack.current.pop()!
       redoStack.current.push(curr)
       return prev
     })
-    setSelectedStopId(null)
   }
 
   const redo = () => {
-    if (redoStack.current.length === 0) return
-    setTrip((curr) => {
+    if (!redoStack.current.length) return
+    setTrip(curr => {
       const next = redoStack.current.pop()!
       undoStack.current.push(curr)
       return next
     })
-    setSelectedStopId(null)
   }
 
-  // --- mutation helpers ---
   const setTripField = (field: keyof Trip, value: any) =>
-    setTripWithHistory((trip) => ({
-      ...trip,
-      [field]: field === 'participants' ? Math.max(1, Number(value) || 1) : value,
-      updatedAt: Date.now(),
-    }))
+    setTripWithHistory(trip => {
+      const newTrip = {
+        ...trip,
+        [field]: field === "participants" ? Math.max(1, Number(value) || 1) : value,
+        updatedAt: Date.now(),
+      }
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(newTrip))
+      } catch {}
+      return newTrip
+    })
 
+  // ✅ Print sayfası için doğrudan PrintSheet render
+  if (printMode) {
+    return <PrintSheet trip={trip} />
+  }
+
+  return (
+    <div className="min-h-screen flex flex-col">
+      <Topbar
+        trip={trip}
+        setTripField={setTripField}
+        onUndo={undo}
+        onRedo={redo}
+        onImportJSON={(f) => {
+          const r = new FileReader()
+          r.onload = () => {
+            try {
+              const parsed = JSON.parse(String(r.result))
+              setTrip(parsed)
+            } catch {
+              alert("Invalid JSON file")
+            }
+          }
+          r.readAsText(f)
+        }}
+      />
+
+      <main className="flex-1">
+        <Planner trip={trip} setTrip={setTripWithHistory} />
+      </main>
+    </div>
+  )
+}
+
+// ------------------ Ana Planner bileşeni ------------------
+type PlannerProps = {
+  trip: Trip
+  setTrip: (next: Trip | ((trip: Trip) => Trip)) => void
+}
+
+function Planner({ trip, setTrip }: PlannerProps) {
+  const { t } = useI18n()
+  const [selectedStopId, setSelectedStopId] = useState<string | null>(null)
+
+  // --- mutation helpers ---
   const addStop = () =>
-    setTripWithHistory((trip) => {
-      const sId = 's_' + uid()
+    setTrip(trip => {
+      const sId = "s_" + uid()
       const newStop = {
         id: sId,
-        city: '',
+        city: "",
         stayNights: 2,
         activities: [] as any[],
         budget: {} as any,
@@ -82,25 +154,25 @@ export default function Planner({ trip, setTrip }: PlannerProps) {
       const prev = stops.length >= 2 ? stops[stops.length - 2] : undefined
       if (prev)
         legs.push({
-          id: 'l_' + uid(),
+          id: "l_" + uid(),
           fromStopId: prev.id,
           toStopId: sId,
-          mode: 'train',
+          mode: "train",
           cost: 0,
         })
       return { ...trip, stops, legs, updatedAt: Date.now() }
     })
 
   const deleteStop = (stopId: string) =>
-    setTripWithHistory((trip) => {
-      const stops = trip.stops.filter((s) => s.id !== stopId)
+    setTrip(trip => {
+      const stops = trip.stops.filter(s => s.id !== stopId)
       const legs: typeof trip.legs = []
       for (let i = 0; i < stops.length - 1; i++) {
         legs.push({
-          id: 'l_' + uid(),
+          id: "l_" + uid(),
           fromStopId: stops[i].id,
           toStopId: stops[i + 1].id,
-          mode: 'train',
+          mode: "train",
           cost: 0,
         })
       }
@@ -108,11 +180,11 @@ export default function Planner({ trip, setTrip }: PlannerProps) {
       return { ...trip, stops, legs, updatedAt: Date.now() }
     })
 
-  const moveStop = (stopId: string, dir: 'up' | 'down') =>
-    setTripWithHistory((trip) => {
-      const i = trip.stops.findIndex((s) => s.id === stopId)
+  const moveStop = (stopId: string, dir: "up" | "down") =>
+    setTrip(trip => {
+      const i = trip.stops.findIndex(s => s.id === stopId)
       if (i < 0) return trip
-      const j = clamp(i + (dir === 'up' ? -1 : 1), 0, trip.stops.length - 1)
+      const j = clamp(i + (dir === "up" ? -1 : 1), 0, trip.stops.length - 1)
       if (i === j) return trip
       const stops = [...trip.stops]
       const [s] = stops.splice(i, 1)
@@ -120,10 +192,10 @@ export default function Planner({ trip, setTrip }: PlannerProps) {
       const legs: typeof trip.legs = []
       for (let k = 0; k < stops.length - 1; k++) {
         legs.push({
-          id: 'l_' + uid(),
+          id: "l_" + uid(),
           fromStopId: stops[k].id,
           toStopId: stops[k + 1].id,
-          mode: 'train',
+          mode: "train",
           cost: 0,
         })
       }
@@ -131,34 +203,34 @@ export default function Planner({ trip, setTrip }: PlannerProps) {
     })
 
   const setStopField = (stopId: string, field: any, value: any) =>
-    setTripWithHistory((trip) => {
-      const stops = trip.stops.map((s) =>
+    setTrip(trip => {
+      const stops = trip.stops.map(s =>
         s.id !== stopId
           ? s
           : ({
               ...s,
-              [field]: field === 'stayNights' ? Number(value) || 0 : value,
-            } as any),
+              [field]: field === "stayNights" ? Number(value) || 0 : value,
+            } as any)
       )
       return { ...trip, stops, updatedAt: Date.now() }
     })
 
   const setLegField = (legId: string, field: any, value: any) =>
-    setTripWithHistory((trip) => {
-      const legs = trip.legs.map((l) =>
+    setTrip(trip => {
+      const legs = trip.legs.map(l =>
         l.id !== legId
           ? l
           : ({
               ...l,
-              [field]: field === 'cost' ? Number(value) || 0 : value,
-            } as any),
+              [field]: field === "cost" ? Number(value) || 0 : value,
+            } as any)
       )
       return { ...trip, legs, updatedAt: Date.now() }
     })
 
   const addActivity = (stopId: string) =>
-    setTripWithHistory((trip) => {
-      const stops = trip.stops.map((s) =>
+    setTrip(trip => {
+      const stops = trip.stops.map(s =>
         s.id !== stopId
           ? s
           : ({
@@ -166,68 +238,52 @@ export default function Planner({ trip, setTrip }: PlannerProps) {
               activities: [
                 ...s.activities,
                 {
-                  id: 'a_' + uid(),
-                  title: t('planner.newActivity'),
-                  category: 'other',
+                  id: "a_" + uid(),
+                  title: t("planner.newActivity"),
+                  category: "other",
                   cost: 0,
                 },
               ],
-            } as any),
+            } as any)
       )
       return { ...trip, stops, updatedAt: Date.now() }
     })
 
   const setActivityField = (stopId: string, actId: string, field: any, value: any) =>
-    setTripWithHistory((trip) => {
-      const stops = trip.stops.map((s) =>
+    setTrip(trip => {
+      const stops = trip.stops.map(s =>
         s.id !== stopId
           ? s
           : ({
               ...s,
-              activities: s.activities.map((a) =>
+              activities: s.activities.map(a =>
                 a.id !== actId
                   ? a
                   : ({
                       ...a,
-                      [field]: field === 'cost' ? Number(value) || 0 : value,
-                    } as any),
+                      [field]: field === "cost" ? Number(value) || 0 : value,
+                    } as any)
               ),
-            } as any),
+            } as any)
       )
       return { ...trip, stops, updatedAt: Date.now() }
     })
 
   const deleteActivity = (stopId: string, actId: string) =>
-    setTripWithHistory((trip) => {
-      const stops = trip.stops.map((s) =>
+    setTrip(trip => {
+      const stops = trip.stops.map(s =>
         s.id !== stopId
           ? s
           : ({
               ...s,
-              activities: s.activities.filter((a) => a.id !== actId),
-            } as any),
+              activities: s.activities.filter(a => a.id !== actId),
+            } as any)
       )
       return { ...trip, stops, updatedAt: Date.now() }
     })
 
-  // --- reset all handler (called from the modal) ---
-  const confirmResetAll = () => {
-    setTripWithHistory((t0) => ({
-      ...t0,
-      title: '',
-      stops: [],
-      legs: [],
-      // keep currency/participants if you want; or reset to defaults:
-      // currency: 'EUR',
-      participants: Math.max(1, Number(t0.participants) || 1),
-      updatedAt: Date.now(),
-    }))
-    setSelectedStopId(null)
-  }
-
   return (
     <div className="min-h-screen text-[var(--color-ink)]">
-      {/* Planner UI (Topbar is now only in App.tsx) */}
       <div className="mx-auto max-w-7xl p-4 grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-4 print:hidden">
         <div className="space-y-4">
           <StopsTimeline
@@ -238,9 +294,9 @@ export default function Planner({ trip, setTrip }: PlannerProps) {
             deleteStop={deleteStop}
             moveStop={moveStop}
             setLegField={setLegField}
-            setTripField={setTripField}
-            // NEW: ask parent to open custom reset modal
-            onRequestResetAll={openReset}
+            setTripField={(f, v) =>
+              setTrip(tr => ({ ...tr, [f]: v, updatedAt: Date.now() }))
+            }
           />
         </div>
 
@@ -248,6 +304,11 @@ export default function Planner({ trip, setTrip }: PlannerProps) {
           <BudgetPanel trip={trip} />
         </aside>
       </div>
+          {/* 🔥 Auto-save bilgisi */}
+      <p className="text-sm text-gray-500 mt-4 italic text-center print:hidden">
+        {t("planner.autosave")}
+      </p>
+
 
       <div className="print:hidden">
         <StopSidebar
@@ -263,16 +324,9 @@ export default function Planner({ trip, setTrip }: PlannerProps) {
 
       <footer className="border-t border-[var(--color-border)] mt-8 print:hidden">
         <div className="mx-auto max-w-7xl p-6 flex flex-col items-center justify-center text-sm opacity-80">
-          © {new Date().getFullYear()} OneTrip — {t('planner.motto')}
+          © {new Date().getFullYear()} OneTrip — {t("planner.motto")}
         </div>
       </footer>
-
-      {/* Custom Reset Modal */}
-      <ResetModal
-        open={showReset}
-        onClose={closeReset}
-        onConfirm={confirmResetAll}
-      />
     </div>
   )
 }

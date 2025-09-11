@@ -1,67 +1,67 @@
 // src/lib/types.ts
 
-// --- Primitive types ---
-export type TransportMode = 'plane' | 'train' | 'bus' | 'car'
-export type ActivityCategory = 'nature' | 'food' | 'culture' | 'nightlife' | 'other'
+export type TransportMode =
+  | 'plane'
+  | 'train'
+  | 'bus'
+  | 'car'
+  | 'ship'
+  | 'walk'
 
-// --- Activity ---
-export interface Activity {
+export type Activity = {
   id: string
   title: string
-  category: ActivityCategory
+  category: string
+  cost: number
   note?: string
-  cost?: number
-  timeTag?: string
 }
 
-// --- Stop Budget ---
-export interface StopBudget {
+export type Budget = {
   lodgingPerNight?: number
-  lodgingTotal?: number   // 🔹 hesaplama kolaylığı için eklendi
+  lodgingTotal?: number
   foodPerDay?: number
   other?: number
 }
 
-// --- Stop ---
-export interface Stop {
+export type Stop = {
   id: string
   city: string
+  /** ISO tarih (yyyy-mm-dd) formatında geliş tarihi */
+  arrivalDate?: string
+  /** ISO tarih (yyyy-mm-dd) formatında ayrılış tarihi */
+  departureDate?: string
+  /** Sistem tarafından arrival-departure farkından hesaplanır */
   stayNights: number
-  startDate?: string
   activities: Activity[]
-  budget: StopBudget
+  budget: Budget
 }
 
-// --- Leg ---
-export interface Leg {
+export type Leg = {
   id: string
   fromStopId: string
   toStopId: string
-  mode?: TransportMode
-  cost?: number
-  durationHours?: number
+  mode: TransportMode
+  cost: number
 }
 
-// --- Budget breakdown ---
-export interface TripBudgetBreakdown {
-  transport: number
-  lodging: number
-  food: number
-  activities: number
-  other: number
-  total: number
-}
-
-// --- Trip ---
-export interface Trip {
+export type Trip = {
   id: string
-  ownerId?: string         // opsiyonel yaptık: bazı yerlerde yok
-  title?: string
-  currency?: string
-  participants?: number
+  title: string
+  currency: string
+  participants: number
   stops: Stop[]
   legs: Leg[]
+  logoDataUrl?: string
   createdAt?: number
   updatedAt?: number
-  logoDataUrl?: string
+  ownerId?: string
+}
+
+// ✅ BudgetPanel için eklenen tip
+export type TripBudgetBreakdown = {
+  transport?: number
+  lodging?: number
+  food?: number
+  activities?: number
+  other?: number
 }

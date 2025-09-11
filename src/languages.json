@@ -62,11 +62,20 @@
   "graph.reset": { "tr": "Seyahati sıfırla", "en": "Reset trip", "de": "Reise zurücksetzen" },
 
   "legEditor.header": { "tr": "Duraklar arası ulaşım:", "en": "Transport between stops:", "de": "Transport zwischen Stopps:" },
+  "legEditor.transport": { "tr": "Duraklar arası ulaşım", "en": "Transport between stops", "de": "Transport zwischen Stopps" },
+  "legEditor.stay": { "tr": "Konaklama süresi", "en": "Stay duration", "de": "Aufenthaltsdauer" },
   "legEditor.plane": { "tr": "Uçak", "en": "Plane", "de": "Flugzeug" },
   "legEditor.train": { "tr": "Tren", "en": "Train", "de": "Zug" },
   "legEditor.bus": { "tr": "Otobüs", "en": "Bus", "de": "Bus" },
   "legEditor.car": { "tr": "Araba", "en": "Car", "de": "Auto" },
+  "legEditor.ship": { "tr": "Gemi", "en": "Ship", "de": "Schiff" },
+  "legEditor.walk": { "tr": "Yürüyüş", "en": "Walk", "de": "Zu Fuß" },
   "legEditor.cost": { "tr": "Maliyet", "en": "Cost", "de": "Kosten" },
+  "legEditor.stayHint": {
+    "tr": "Takvimden seçebilir veya gece sayısını elle girebilirsiniz.",
+    "en": "You can either pick from the calendar or enter the number of nights manually.",
+    "de": "Wähle entweder im Kalender oder gib die Anzahl der Nächte manuell ein."
+  },
 
   "budget.title": { "tr": "Bütçe Planlayıcı", "en": "Budget Planner", "de": "Budgetplaner" },
   "budget.transport": { "tr": "Ulaşım", "en": "Transport", "de": "Transport" },
@@ -121,7 +130,7 @@
   "print.groupTotal": { "tr": "Grup Toplamı", "en": "Group Total", "de": "Gesamt (Gruppe)" },
   "print.perPerson": { "tr": "Kişi başı", "en": "Per person", "de": "Pro Person" },
   "print.unknown": { "tr": "Bilinmiyor", "en": "Unknown", "de": "Unbekannt" },
-  
+
   "planner.motto": {
     "tr": "Tek ekranda planla.",
     "en": "Plan it all on one screen.",
@@ -133,10 +142,25 @@
     "en": "New Activity",
     "de": "Neue Aktivität"
   },
-    
+
   "planner.jsonError": {
     "tr": "JSON okunamadı",
     "en": "Could not read JSON",
     "de": "JSON konnte nicht gelesen werden"
-  }
+  },
+
+  "planner.autosave": {
+    "tr": "💾 Seyahatiniz tarayıcınıza otomatik olarak kaydedilir. İstediğiniz zaman kapatabilir ve daha sonra devam edebilirsiniz.",
+    "en": "💾 Your trip is automatically saved in your browser. Close anytime and continue later.",
+    "de": "💾 Ihre Reise wird automatisch in Ihrem Browser gespeichert. Sie können jederzeit schließen und später fortsetzen."
+  },
+  "blog.title": { "tr": "OneTrip Blog", "en": "OneTrip Blog", "de": "OneTrip Blog" },
+  "blog.subtitle": { 
+  "tr": "Yolculuk hikayeleri, ipuçları ve güncellemeler burada.", 
+  "en": "Travel stories, tips, and updates right here.", 
+  "de": "Reisegeschichten, Tipps und Updates hier." 
+},
+"menu.blog": { "tr": "Blog", "en": "Blog", "de": "Blog" }
+
+
 }

@@ -38,7 +38,7 @@ export default function StopsTimeline({
     cardRefs.current[id] = el
   }
 
-  // open new stop + prevent flicker
+  // yeni durak eklendiğinde flicker önle
   const prevCountRef = useRef<number>(trip.stops?.length ?? 0)
   useEffect(() => {
     const prev = prevCountRef.current
@@ -58,7 +58,7 @@ export default function StopsTimeline({
     prevCountRef.current = curr
   }, [trip.stops, setSelectedStopId])
 
-  // close panel if active stop removed
+  // aktif durak silindiyse paneli kapat
   useEffect(() => {
     if (!activeStopId) return
     const stillThere = (trip.stops ?? []).some((s) => s.id === activeStopId)
@@ -71,12 +71,16 @@ export default function StopsTimeline({
   }
 
   const handleActivateFromGraph = (id: string | null) => {
-    if (!id) { setActiveStopId(null); return }
+    if (!id) {
+      setActiveStopId(null)
+      return
+    }
     setActiveStopId((prev) => (prev === id ? null : id))
     const el = cardRefs.current[id]
     if (el) el.scrollIntoView({ block: 'center', behavior: 'smooth' })
   }
 
+  // ✅ Reset artık currency ve participants’i koruyor
   const handleResetTrip = () => {
     setActiveStopId(null)
     setSelectedStopId(null)
@@ -127,6 +131,10 @@ export default function StopsTimeline({
 
         const mounting = mountingId === s.id
 
+        const leg = trip.legs.find(
+          (l) => l.fromStopId === s.id && l.toStopId === trip.stops[i + 1]?.id
+        )
+
         return (
           <div
             key={s.id}
@@ -137,74 +145,68 @@ export default function StopsTimeline({
               (mounting ? 'opacity-0 translate-y-1' : 'opacity-100 translate-y-0')
             }
           >
-            <div className="p-4 flex items-center gap-4">
-              <EmojiButton emoji="⬆️" label={t('stops.up')} title={t('stops.up')} onClick={() => moveStop(s.id, 'up')} variant="ghost" />
-              <EmojiButton emoji="⬇️" label={t('stops.down')} title={t('stops.down')} onClick={() => moveStop(s.id, 'down')} variant="ghost" />
-
-              <input
-                value={s.city}
-                onChange={(e) => setStopField(s.id, 'city', e.target.value)}
-                placeholder={t('stops.city.placeholder')}
-                className="flex-1 px-3 py-2 rounded-xl border border-[var(--color-border)] bg-white outline-none"
-              />
-
-              <label className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-[var(--color-border)] bg-white">
-                <span>{t('stops.stayNights')}</span>
+            <div className="p-4 flex flex-col gap-3">
+              <div className="flex gap-2">
+                <EmojiButton emoji="⬆️" label={t('stops.up')} title={t('stops.up')} onClick={() => moveStop(s.id, 'up')} variant="ghost" />
+                <EmojiButton emoji="⬇️" label={t('stops.down')} title={t('stops.down')} onClick={() => moveStop(s.id, 'down')} variant="ghost" />
                 <input
-                  type="number"
-                  inputMode="numeric"
-                  min={0}
-                  value={s.stayNights}
-                  onFocus={(e) => e.currentTarget.select()}
-                  onChange={(e) => setStopField(s.id, 'stayNights', Number(e.target.value) || 0)}
-                  className="w-20 bg-transparent outline-none"
+                  value={s.city}
+                  onChange={(e) => setStopField(s.id, 'city', e.target.value)}
+                  placeholder={t('stops.city.placeholder')}
+                  className="flex-1 px-3 py-2 rounded-xl border border-[var(--color-border)] bg-white outline-none"
                 />
-              </label>
-
-              <EmojiButton
-                emoji="🧺"
-                label={t('stops.activities')}
-                title={t('stops.activities')}
-                onClick={() => setSelectedStopId(s.id)}
-                variant="btn"
-              />
-
-              <EmojiButton
-                emoji="🗑"
-                label={t('stops.delete')}
-                title={t('stops.delete')}
-                onClick={() => {
-                  deleteStop(s.id)
-                }}
-                variant="btn"
-                className="!bg-red-600 hover:!bg-red-700 border-red-600"
-              />
+                <EmojiButton
+                  emoji="🧺"
+                  label={t('stops.activities')}
+                  title={t('stops.activities')}
+                  onClick={() => setSelectedStopId(s.id)}
+                  variant="btn"
+                />
+                <EmojiButton
+                  emoji="🗑"
+                  label={t('stops.delete')}
+                  title={t('stops.delete')}
+                  onClick={() => deleteStop(s.id)}
+                  variant="btn"
+                  className="!bg-red-600 hover:!bg-red-700 border-red-600"
+                />
+              </div>
             </div>
 
-            {i < trip.stops.length - 1 && (
+            {i < trip.stops.length - 1 && leg && (
               <LegEditor
-                leg={trip.legs.find(
-                  (l) => l.fromStopId === s.id && l.toStopId === trip.stops[i + 1].id
-                )}
+                leg={leg}
+                stopId={s.id}
+                trip={trip}
+                setTripField={setTripField}
                 setLegField={setLegField}
               />
             )}
 
             <div className="px-4 pb-4 text-sm text-neutral-600 flex flex-wrap gap-2">
-              <span className="tag">{t('stops.tag.activities')}: {s.activities.length}</span>
-              {lodgingTotal > 0 && <span className="tag">{t('stops.tag.lodging', { v: String(lodgingTotal) })}</span>}
+              <span className="tag">
+                {t('stops.tag.activities')}: {s.activities.length}
+              </span>
+              {lodgingTotal > 0 && (
+                <span className="tag">
+                  {t('stops.tag.lodging', { v: String(lodgingTotal) })}
+                </span>
+              )}
               {typeof b.foodPerDay === 'number' && b.foodPerDay > 0 && (
-                <span className="tag">{t('stops.tag.food', { v: String(b.foodPerDay) })}</span>
+                <span className="tag">
+                  {t('stops.tag.food', { v: String(b.foodPerDay) })}
+                </span>
               )}
               {typeof b.other === 'number' && b.other > 0 && (
-                <span className="tag">{t('stops.tag.other', { v: String(b.other) })}</span>
+                <span className="tag">
+                  {t('stops.tag.other', { v: String(b.other) })}
+                </span>
               )}
             </div>
           </div>
         )
       })}
 
-      {/* Reset confirmation modal */}
       <ResetModal
         open={resetOpen}
         onClose={() => setResetOpen(false)}

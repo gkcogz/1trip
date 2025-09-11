@@ -1,6 +1,6 @@
 // src/components/StopsGraph.tsx
 import React, { useMemo, useRef } from 'react'
-import { Trip } from '../lib/types'
+import { Trip, TransportMode } from '../lib/types'
 import { EmojiButton } from './ui'
 import { useI18n } from '../i18n'
 
@@ -13,14 +13,14 @@ type Props = {
   printSafe?: boolean
 }
 
-const modeIcon = (mode?: string) => {
-  switch (mode) {
-    case 'plane': return '✈️'
-    case 'train': return '🚆'
-    case 'bus':   return '🚌'
-    case 'car':   return '🚗'
-    default:      return '•'
-  }
+function modeIcon(mode?: TransportMode) {
+  if (mode === 'plane') return { emoji: '✈️', label: 'Plane' }
+  if (mode === 'train') return { emoji: '🚄', label: 'Train' }
+  if (mode === 'bus') return { emoji: '🚌', label: 'Bus' }
+  if (mode === 'car') return { emoji: '🚗', label: 'Car' }
+  if (mode === 'ship') return { emoji: '🚢', label: 'Ship' }
+  if (mode === 'walk') return { emoji: '🚶', label: 'Walk' }
+  return { emoji: '❓', label: 'Unknown' }
 }
 
 export default function StopsGraph({
@@ -37,10 +37,10 @@ export default function StopsGraph({
     [n, stops]
   )
 
-  const legMode = (i: number): string | undefined => {
+  const legMode = (i: number): TransportMode | undefined => {
     const from = stops[i]?.id
     const to   = stops[i + 1]?.id
-    return legs.find(l => l.fromStopId === from && l.toStopId === to)?.mode
+    return legs.find(l => l.fromStopId === from && l.toStopId === to)?.mode as TransportMode | undefined
   }
 
   const graphRef = useRef<HTMLDivElement>(null)
@@ -67,7 +67,6 @@ export default function StopsGraph({
       }`}
       ref={graphRef}
     >
-      {/* Header (skip in printSafe) */}
       {!printSafe && (
         <div className="flex items-center justify-between mb-3">
           <div className="text-sm font-medium text-[var(--color-accent)]">{t('graph.header')}</div>
@@ -103,40 +102,60 @@ export default function StopsGraph({
           ))}
         </svg>
 
-        {/* Transport icons */}
+        {/* Transport icons with hover-expand */}
         {n >= 2 && xs.slice(0, -1).map((x, i) => {
           const x2 = xs[i + 1]
           const mid = (x + x2) / 2
-          const icon = modeIcon(legMode(i))
+          const { emoji, label } = modeIcon(legMode(i))
           return (
-            <span
+            <div
               key={`icon-${i}`}
-              role="img"
-              aria-label="transport"
-              className="absolute -translate-x-1/2 -translate-y-1/2 select-none text-xl"
+              className="absolute -translate-x-1/2 -translate-y-1/2 select-none text-xl group flex items-center"
               style={{ left: `${mid}%`, top: '50%' }}
             >
-              {icon}
-            </span>
+              <span>{emoji}</span>
+              <span
+                className="ml-1 max-w-0 opacity-0 overflow-hidden whitespace-nowrap 
+                           group-hover:max-w-[100px] group-hover:opacity-100 
+                           transition-all duration-200 ease-out text-sm text-[var(--color-accent)]"
+              >
+                {label}
+              </span>
+            </div>
           )
         })}
 
-        {/* Stop nodes */}
-        {stops.map((s, i) => (
-          <div
-            key={s.id}
-            className="absolute -translate-x-1/2 -translate-y-1/2 flex flex-col items-center"
-            style={{ left: `${xs[i]}%`, top: '50%' }}
-            onClick={() => handleNodeClick(i)}
-          >
-            <span className="w-9 h-9 rounded-full border-2 flex items-center justify-center bg-white border-[var(--color-brand)]">
-              <span className="inline-block rounded-full w-3.5 h-3.5 bg-[var(--color-brand)]" />
-            </span>
-            <span className="mt-2 text-[11px] leading-tight max-w-[120px] text-center truncate text-[var(--color-accent)]">
-              {s.city || `Stop ${i + 1}`}
-            </span>
-          </div>
-        ))}
+        {/* Stop nodes with active highlighting */}
+        {stops.map((s, i) => {
+          const isActive = s.id === activeStopId
+          return (
+            <div
+              key={s.id}
+              className="absolute -translate-x-1/2 -translate-y-1/2 flex flex-col items-center cursor-pointer"
+              style={{ left: `${xs[i]}%`, top: '50%' }}
+              onClick={() => handleNodeClick(i)}
+            >
+              <span
+                className={`w-9 h-9 rounded-full border-2 flex items-center justify-center 
+                  ${isActive
+                    ? 'bg-white border-[var(--color-brand)]'
+                    : 'bg-white border-gray-300 opacity-60'
+                  }`}
+              >
+                <span
+                  className={`inline-block rounded-full w-3.5 h-3.5 
+                    ${isActive ? 'bg-[var(--color-brand)]' : 'bg-gray-300'}`}
+                />
+              </span>
+              <span
+                className={`mt-2 text-[11px] leading-tight max-w-[120px] text-center truncate 
+                  ${isActive ? 'text-[var(--color-accent)]' : 'text-gray-400'}`}
+              >
+                {s.city || `Stop ${i + 1}`}
+              </span>
+            </div>
+          )
+        })}
       </div>
     </div>
   )

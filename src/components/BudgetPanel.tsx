@@ -17,6 +17,9 @@ export default function BudgetPanel(props: Props) {
   const currency = trip?.currency ?? props.currency ?? 'EUR'
   const participants = Math.max(1, Number(trip?.participants ?? props.participants ?? 1))
 
+  // 🔍 Debug: seçili currency konsolda görünsün
+  console.log("BudgetPanel currency:", currency)
+
   let transport = 0
   let lodging = 0
   let food = 0
