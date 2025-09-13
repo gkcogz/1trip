@@ -9,6 +9,7 @@ import StopSidebar from "../components/StopSidebar"
 import { useI18n } from "../i18n"
 import Topbar from "../components/Topbar"
 import PrintSheet from "../components/PrintSheet"
+import { hashDecode } from "../lib/storage"   // ✅
 
 const STORAGE_KEY = "onetrip_saved_trip"
 const HISTORY_LIMIT = 60
@@ -41,6 +42,22 @@ export default function PlannerWrapper({ printMode = false }: { printMode?: bool
   const [trip, setTrip] = useState<Trip>(() =>
     passedTrip ? passedTrip : loadTrip(defaultTrip)
   )
+
+  // 🔥 URL hash (#plan=...) kontrolü + temizleme
+  useEffect(() => {
+    if (window.location.hash.startsWith("#plan=")) {
+      try {
+        const decoded = hashDecode()   // parametresiz çağır
+        if (decoded) {
+          setTrip(decoded)
+          // URL’den hash’i temizle (sadece pathname kalır)
+          window.history.replaceState(null, "", window.location.pathname)
+        }
+      } catch (e) {
+        console.error("Failed to load trip from URL", e)
+      }
+    }
+  }, [])
 
   // her değişiklikte localStorage’a yaz
   useEffect(() => {
@@ -304,11 +321,11 @@ function Planner({ trip, setTrip }: PlannerProps) {
           <BudgetPanel trip={trip} />
         </aside>
       </div>
-          {/* 🔥 Auto-save bilgisi */}
+
+      {/* 🔥 Auto-save bilgisi */}
       <p className="text-sm text-gray-500 mt-4 italic text-center print:hidden">
         {t("planner.autosave")}
       </p>
-
 
       <div className="print:hidden">
         <StopSidebar
