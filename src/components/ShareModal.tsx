@@ -6,21 +6,24 @@ import { useI18n } from '../i18n'
 type Props = {
   open: boolean
   url: string
+  title?: string    // ✅ EKLENDİ: e-postada konu için
   onClose: () => void
 }
 
-export default function ShareModal({ open, url, onClose }: Props) {
+export default function ShareModal({ open, url, title, onClose }: Props) {
   const { t } = useI18n()
   if (!open) return null
 
   const encodedUrl = encodeURIComponent(url)
-  const subject = encodeURIComponent('My OneTrip route')
-  const body = encodeURIComponent(`Here is my trip plan:\n${url}`)
+  const subjectText = title && title.trim() ? `${title} — OneTrip` : t('share.title')
+  const subject = encodeURIComponent(subjectText)
+  const body = encodeURIComponent(`${t('share.text')}\n${url}`)
 
   const links = {
-    email: `mailto:?subject=${subject}&body=${body}`,
+    emailDefault: `mailto:?subject=${subject}&body=${body}`,
+    emailGmail: `https://mail.google.com/mail/?view=cm&fs=1&su=${subject}&body=${body}`,
     whatsapp: `https://wa.me/?text=${encodedUrl}`,
-    x: `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodeURIComponent('My OneTrip route')}`,
+    x: `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodeURIComponent(subjectText)}`,
     facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`,
   }
 
@@ -34,8 +37,8 @@ export default function ShareModal({ open, url, onClose }: Props) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-md mx-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={onClose}>
+      <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-md mx-4" onClick={(e)=>e.stopPropagation()}>
         <h2 className="text-lg font-semibold text-[var(--color-brand)] mb-3">{t('share.title')}</h2>
         <p className="text-sm text-[var(--color-muted)] mb-4">
           {t('share.text')}
@@ -50,11 +53,17 @@ export default function ShareModal({ open, url, onClose }: Props) {
             <EmojiButton emoji="📘" label={t('share.facebook')} title="Facebook" variant="btn" />
           </a>
           <a href={links.x} target="_blank" rel="noreferrer">
-            <EmojiButton emoji="❌" label={t('share.x')} title="X" variant="btn" />
+            <EmojiButton emoji="𝕏" label={t('share.x')} title="X" variant="btn" />
           </a>
-          <a href={links.email}>
-            <EmojiButton emoji="✉️" label={t('share.email')} title="Email" variant="btn" />
+
+          {/* ✅ İki e-posta seçeneği */}
+          <a href={links.emailDefault}>
+            <EmojiButton emoji="✉️" label={t('share.email')} title={t('share.email')} variant="btn" />
           </a>
+          <a href={links.emailGmail} target="_blank" rel="noreferrer">
+            <EmojiButton emoji="📧" label="Gmail" title="Gmail" variant="btn" />
+          </a>
+
           <EmojiButton emoji="🔗" label={t('common.copyLink')} title={t('common.copyLink')} onClick={copyLink} variant="btn" />
         </div>
 

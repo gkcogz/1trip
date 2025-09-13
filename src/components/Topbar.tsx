@@ -225,7 +225,7 @@ export default function Topbar({
         </div>
       </div>
 
-      <ShareModal open={showShare} url={shareUrl()} onClose={() => setShowShare(false)} />
+      <ShareModal open={showShare} url={shareUrl()} title={trip?.title || 'OneTrip route'} onClose={() => setShowShare(false)} />
     </header>
   )
 }
