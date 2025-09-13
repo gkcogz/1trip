@@ -1,5 +1,3 @@
-import fm from "front-matter"
-
 export type BlogPost = {
   slug: string
   title: string
@@ -8,27 +6,42 @@ export type BlogPost = {
   content: string
 }
 
-const files = import.meta.glob("../content/blog/*.md", { eager: true, as: "raw" })
+// Şimdilik sadece EN içerikler
+export const blogPosts: BlogPost[] = []
 
-export const blogPosts: BlogPost[] = Object.entries(files).map(([path, raw]) => {
-  if (typeof raw !== "string") {
-    console.error(`❌ Blog loader: ${path} beklenmedik formatta geldi:`, raw)
-    return {
-      slug: "invalid",
-      title: "Invalid Post",
-      date: "",
-      excerpt: "",
-      content: "",
-    }
-  }
+// Eğer md dosyalarını import.meta.glob ile okuyorsan:
+const files = import.meta.glob("../content/blog/*.md", { eager: true }) as Record<
+  string,
+  { default: string }
+>
 
-  const parsed = fm<any>(raw)
+function parseFrontmatter(raw: string) {
+  const match = /^---\n([\s\S]*?)\n---/.exec(raw)
+  if (!match) return { data: {}, content: raw }
+  const frontmatter = Object.fromEntries(
+    match[1].split("\n").map((line) => line.split(":").map((x) => x.trim()))
+  )
+  const content = raw.slice(match[0].length).trim()
+  return { data: frontmatter, content }
+}
 
-  return {
-    slug: parsed.attributes.slug || path.split("/").pop()?.replace(/\.md$/, "") || "untitled",
-    title: parsed.attributes.title || "Untitled",
-    date: parsed.attributes.date || new Date().toISOString(),
-    excerpt: parsed.attributes.excerpt || "",
-    content: parsed.body,
-  }
-}).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+for (const [path, mod] of Object.entries(files)) {
+  // sadece İngilizce olan dosyaları al (ör: .../how-to-plan-your-trip.md)
+  if (path.endsWith("-tr.md") || path.endsWith("-de.md")) continue
+
+  const raw = mod.default as string
+  const { data, content } = parseFrontmatter(raw)
+  const fileName = path.split("/").pop()!
+  const slug = fileName.replace(/\.md$/, "")
+
+  blogPosts.push({
+    slug,
+    title: data.title || slug,
+    date: data.date || new Date().toISOString(),
+    excerpt: data.excerpt || "",
+    content,
+  })
+}
+
+// Tarihe göre sırala
+blogPosts.sort((a, b) => (a.date > b.date ? -1 : 1))

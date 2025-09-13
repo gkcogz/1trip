@@ -10,7 +10,9 @@ export default function BlogPost() {
     return (
       <div className="max-w-3xl mx-auto p-6">
         <h1 className="text-2xl font-bold text-red-600">Post not found</h1>
-        <Link to="/blog" className="btn mt-4">← Back to Blog</Link>
+        <Link to="/blog" className="btn mt-4">
+          ← Back to Blog
+        </Link>
       </div>
     )
   }

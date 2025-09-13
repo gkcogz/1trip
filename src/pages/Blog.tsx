@@ -2,6 +2,8 @@ import { Link } from "react-router-dom"
 import { blogPosts } from "../lib/loadBlogPosts"
 
 export default function Blog() {
+  const posts = blogPosts // sadece EN
+
   return (
     <div className="max-w-5xl mx-auto p-6 space-y-10">
       <header className="text-center space-y-2">
@@ -9,12 +11,12 @@ export default function Blog() {
           OneTrip Blog
         </h1>
         <p className="text-[var(--color-muted)] text-lg">
-          Travel stories, guides, and updates from OneTrip.
+          Travel stories, guides, and updates from OneTrip Community.
         </p>
       </header>
 
       <div className="grid md:grid-cols-2 gap-8">
-        {blogPosts.map((post) => (
+        {posts.map((post) => (
           <article
             key={post.slug}
             className="glass p-6 space-y-3 transition-transform hover:shadow-2xl hover:-translate-y-1 rounded-2xl"
