@@ -331,3 +331,23 @@ input::placeholder,textarea::placeholder { color:var(--color-muted) }
 .animate-fadeIn {
   animation: fadeIn 0.6s ease-out both;
 }
+
+.print-link {
+  display: inline-block;
+  padding: 2px 8px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-accent);
+  text-decoration: none;
+  background: #fff;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+.print-link:hover {
+  background: var(--color-brand);
+  color: #fff;
+  border-color: var(--color-brand);
+}
+

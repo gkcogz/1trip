@@ -16,7 +16,7 @@ function money(n: number | undefined, currency: string) {
 export default function PrintSheet({ trip }: { trip: Trip }) {
   const { t } = useI18n()
   const stops = trip.stops ?? []
-  const legs  = trip.legs  ?? []
+  const legs = trip.legs ?? []
   const currency = trip.currency || 'EUR'
   const participants = Math.max(1, trip.participants || 1)
 
@@ -36,7 +36,15 @@ export default function PrintSheet({ trip }: { trip: Trip }) {
         0
       )
       const subtotal = lodgingTotal + foodTotal + otherTotal + activitiesTotal
-      return { id: s.id, nights, lodgingTotal, foodTotal, otherTotal, activitiesTotal, subtotal }
+      return {
+        id: s.id,
+        nights,
+        lodgingTotal,
+        foodTotal,
+        otherTotal,
+        activitiesTotal,
+        subtotal,
+      }
     })
   }, [stops, participants])
 
@@ -55,12 +63,17 @@ export default function PrintSheet({ trip }: { trip: Trip }) {
           <div className="print-sub">
             {t('print.header.line', {
               n: participants,
-              travelers: participants > 1 ? t('print.travelers.plural') : t('print.travelers.singular'),
-              cur: currency
+              travelers:
+                participants > 1
+                  ? t('print.travelers.plural')
+                  : t('print.travelers.singular'),
+              cur: currency,
             })}
           </div>
         </div>
-        {trip.logoDataUrl && <img src={trip.logoDataUrl} alt="logo" className="print-logo" />}
+        {trip.logoDataUrl && (
+          <img src={trip.logoDataUrl} alt="logo" className="print-logo" />
+        )}
       </div>
 
       {/* Route overview */}
@@ -87,7 +100,7 @@ export default function PrintSheet({ trip }: { trip: Trip }) {
                   <div className="print-stop-sub">
                     {t('print.nightsSubtotal', {
                       nights: p.nights,
-                      subtotal: money(p.subtotal, currency)
+                      subtotal: money(p.subtotal, currency),
                     })}
                   </div>
                 </div>
@@ -96,10 +109,20 @@ export default function PrintSheet({ trip }: { trip: Trip }) {
                   <table className="print-table">
                     <thead>
                       <tr>
-                        <th style={{ width: '45%' }}>{t('print.tbl.activity')}</th>
-                        <th style={{ width: '20%' }}>{t('print.tbl.category')}</th>
+                        <th style={{ width: '30%' }}>
+                          {t('print.tbl.activity')}
+                        </th>
+                        <th style={{ width: '15%' }}>
+                          {t('print.tbl.category')}
+                        </th>
                         <th style={{ width: '25%' }}>{t('print.tbl.note')}</th>
-                        <th style={{ width: '10%' }} className="text-right">{t('print.tbl.cost')}</th>
+                        <th style={{ width: '15%' }}>{t('print.tbl.link')}</th>
+                        <th
+                          style={{ width: '15%' }}
+                          className="text-right"
+                        >
+                          {t('print.tbl.cost')}
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
@@ -108,27 +131,49 @@ export default function PrintSheet({ trip }: { trip: Trip }) {
                           <td>{a.title}</td>
                           <td>{a.category || '-'}</td>
                           <td>{a.note || ''}</td>
-                          <td className="text-right">{money(a.cost || 0, currency)}</td>
+                          <td>
+                            {a.link ? (
+                              <a
+                                href={a.link}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="print-link"
+                              >
+                                🔗 {t('print.open')}
+                              </a>
+                            ) : (
+                              ''
+                            )}
+                          </td>
+                          <td className="text-right">
+                            {money(a.cost || 0, currency)}
+                          </td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 ) : (
-                  <div className="print-muted">{t('print.noActivities')}</div>
+                  <div className="print-muted">
+                    {t('print.noActivities')}
+                  </div>
                 )}
 
                 <div className="print-grid">
                   <div className="print-grid-item">
-                    {t('print.lodgingTotal')}: <b>{money(p.lodgingTotal, currency)}</b>
+                    {t('print.lodgingTotal')}:{' '}
+                    <b>{money(p.lodgingTotal, currency)}</b>
                   </div>
                   <div className="print-grid-item">
-                    {t('print.foodFormula')}: <b>{money(p.foodTotal, currency)}</b>
+                    {t('print.foodFormula')}:{' '}
+                    <b>{money(p.foodTotal, currency)}</b>
                   </div>
                   <div className="print-grid-item">
-                    {t('print.otherTotal')}: <b>{money(p.otherTotal, currency)}</b>
+                    {t('print.otherTotal')}:{' '}
+                    <b>{money(p.otherTotal, currency)}</b>
                   </div>
                   <div className="print-grid-item">
-                    {t('print.activitiesTotal')}: <b>{money(p.activitiesTotal, currency)}</b>
+                    {t('print.activitiesTotal')}:{' '}
+                    <b>{money(p.activitiesTotal, currency)}</b>
                   </div>
                 </div>
               </div>
@@ -151,23 +196,30 @@ export default function PrintSheet({ trip }: { trip: Trip }) {
             </thead>
             <tbody>
               {legs.map((l: any) => {
-                const from = stops.find(s => s.id === l.fromStopId)
-                const to   = stops.find(s => s.id === l.toStopId)
+                const from = stops.find((s) => s.id === l.fromStopId)
+                const to = stops.find((s) => s.id === l.toStopId)
                 return (
                   <tr key={l.id}>
                     <td>
-                      {(from?.city || t('print.unknown'))} → {(to?.city || t('print.unknown'))}
+                      {(from?.city || t('print.unknown'))} →{' '}
+                      {(to?.city || t('print.unknown'))}
                     </td>
                     <td>{l.mode || '-'}</td>
-                    <td className="text-right">{money(l.cost || 0, currency)}</td>
+                    <td className="text-right">
+                      {money(l.cost || 0, currency)}
+                    </td>
                   </tr>
                 )
               })}
             </tbody>
             <tfoot>
               <tr>
-                <td colSpan={2} className="text-right font-medium">{t('print.transportTotal')}</td>
-                <td className="text-right font-medium">{money(transportTotal, currency)}</td>
+                <td colSpan={2} className="text-right font-medium">
+                  {t('print.transportTotal')}
+                </td>
+                <td className="text-right font-medium">
+                  {money(transportTotal, currency)}
+                </td>
               </tr>
             </tfoot>
           </table>

@@ -6,7 +6,7 @@ import { useI18n } from '../i18n'
 type Props = {
   open: boolean
   url: string
-  title?: string    // ✅ EKLENDİ: e-postada konu için
+  title?: string   // ✅ e-posta başlığı için
   onClose: () => void
 }
 
@@ -15,15 +15,15 @@ export default function ShareModal({ open, url, title, onClose }: Props) {
   if (!open) return null
 
   const encodedUrl = encodeURIComponent(url)
-  const subjectText = title && title.trim() ? `${title} — OneTrip` : t('share.title')
+  const subjectText = title && title.trim() ? `${title} — OneTrip` : 'My OneTrip route'
   const subject = encodeURIComponent(subjectText)
-  const body = encodeURIComponent(`${t('share.text')}\n${url}`)
+  const body = encodeURIComponent(`Here is my trip plan:\n${url}`)
 
   const links = {
-    emailDefault: `mailto:?subject=${subject}&body=${body}`,
-    emailGmail: `https://mail.google.com/mail/?view=cm&fs=1&su=${subject}&body=${body}`,
+    email: `mailto:?subject=${subject}&body=${body}`,
+    gmail: `https://mail.google.com/mail/?view=cm&fs=1&su=${subject}&body=${body}`,
     whatsapp: `https://wa.me/?text=${encodedUrl}`,
-    x: `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodeURIComponent(subjectText)}`,
+    x: `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${subject}`,
     facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`,
   }
 
@@ -37,14 +37,14 @@ export default function ShareModal({ open, url, title, onClose }: Props) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={onClose}>
-      <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-md mx-4" onClick={(e)=>e.stopPropagation()}>
-        <h2 className="text-lg font-semibold text-[var(--color-brand)] mb-3">{t('share.title')}</h2>
-        <p className="text-sm text-[var(--color-muted)] mb-4">
-          {t('share.text')}
-        </p>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+      <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-md mx-4">
+        <h2 className="text-lg font-semibold text-[var(--color-brand)] mb-3">
+          {t('share.title')}
+        </h2>
+        <p className="text-sm text-[var(--color-muted)] mb-4">{t('share.text')}</p>
 
-        {/* share buttons row */}
+        {/* Share buttons */}
         <div className="flex items-center gap-2 flex-wrap mb-4">
           <a href={links.whatsapp} target="_blank" rel="noreferrer">
             <EmojiButton emoji="🟢" label={t('share.whatsapp')} title="WhatsApp" variant="btn" />
@@ -55,19 +55,18 @@ export default function ShareModal({ open, url, title, onClose }: Props) {
           <a href={links.x} target="_blank" rel="noreferrer">
             <EmojiButton emoji="𝕏" label={t('share.x')} title="X" variant="btn" />
           </a>
-
-          {/* ✅ İki e-posta seçeneği */}
-          <a href={links.emailDefault}>
-            <EmojiButton emoji="✉️" label={t('share.email')} title={t('share.email')} variant="btn" />
+          {/* ✅ E-posta */}
+          <a href={links.email}>
+            <EmojiButton emoji="✉️" label={t('share.email')} title="Email" variant="btn" />
           </a>
-          <a href={links.emailGmail} target="_blank" rel="noreferrer">
+          {/* ✅ Gmail */}
+          <a href={links.gmail} target="_blank" rel="noreferrer">
             <EmojiButton emoji="📧" label="Gmail" title="Gmail" variant="btn" />
           </a>
-
           <EmojiButton emoji="🔗" label={t('common.copyLink')} title={t('common.copyLink')} onClick={copyLink} variant="btn" />
         </div>
 
-        {/* link field */}
+        {/* Link field */}
         <div className="flex items-center gap-2 border border-[var(--color-border)] rounded-xl p-2 mb-6 bg-neutral-50">
           <input
             readOnly
@@ -79,7 +78,14 @@ export default function ShareModal({ open, url, title, onClose }: Props) {
         </div>
 
         <div className="flex justify-end">
-          <EmojiButton emoji="✖️" label={t('common.close')} title={t('common.close')} onClick={onClose} variant="btn" className="bg-neutral-200 text-black hover:bg-neutral-300" />
+          <EmojiButton
+            emoji="✖️"
+            label={t('common.close')}
+            title={t('common.close')}
+            onClick={onClose}
+            variant="btn"
+            className="bg-neutral-200 text-black hover:bg-neutral-300"
+          />
         </div>
       </div>
     </div>

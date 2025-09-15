@@ -1,28 +1,40 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 
-  <!-- Homepage: en önemli sayfa -->
+  <!-- Homepage -->
   <url>
     <loc>https://1trip.app/</loc>
     <priority>1.0</priority>
     <changefreq>daily</changefreq>
   </url>
 
-  <!-- Blog: düzenli içerik üretimi yapılacak -->
+  <!-- Blog index -->
   <url>
     <loc>https://1trip.app/blog</loc>
     <priority>0.8</priority>
     <changefreq>weekly</changefreq>
   </url>
 
-  <!-- About: statik bilgi -->
+  <!-- Blog articles -->
+  <url>
+    <loc>https://1trip.app/blog/how-to-plan-your-trip</loc>
+    <priority>0.7</priority>
+    <changefreq>yearly</changefreq>
+  </url>
+  <url>
+    <loc>https://1trip.app/blog/plan-multi-city-trip-2025</loc>
+    <priority>0.7</priority>
+    <changefreq>yearly</changefreq>
+  </url>
+
+  <!-- About -->
   <url>
     <loc>https://1trip.app/about</loc>
     <priority>0.5</priority>
     <changefreq>yearly</changefreq>
   </url>
 
-  <!-- Contact: statik bilgi -->
+  <!-- Contact -->
   <url>
     <loc>https://1trip.app/contact</loc>
     <priority>0.5</priority>

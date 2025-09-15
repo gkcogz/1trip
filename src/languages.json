@@ -160,7 +160,11 @@
   "en": "Travel stories, tips, and updates right here.", 
   "de": "Reisegeschichten, Tipps und Updates hier." 
 },
-"menu.blog": { "tr": "Blog", "en": "Blog", "de": "Blog" }
+"menu.blog": { "tr": "Blog", "en": "Blog", "de": "Blog" },
+
+"print.tbl.link": { "tr": "Bağlantı", "en": "Link", "de": "Link" },
+"print.open": { "tr": "Aç", "en": "Open", "de": "Öffnen" }
+
 
 
 }

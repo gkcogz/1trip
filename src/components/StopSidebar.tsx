@@ -1,5 +1,5 @@
 // src/components/StopSidebar.tsx
-import { Trip } from '../lib/types'
+import { Trip } from '@lib/types'
 import { Field, EmojiButton } from './ui'
 import { useI18n } from '../i18n'
 
@@ -39,7 +39,13 @@ export default function StopSidebar({
       >
         <div className="p-4 flex items-center justify-between border-b border-[var(--color-border)]">
           <div className="font-semibold text-[var(--color-brand)]">{t('sidebar.title')}</div>
-          <EmojiButton emoji="✖️" label={t('common.close')} title={t('common.close')} onClick={() => setSelectedStopId(null)} variant="ghost" />
+          <EmojiButton
+            emoji="✖️"
+            label={t('common.close')}
+            title={t('common.close')}
+            onClick={() => setSelectedStopId(null)}
+            variant="ghost"
+          />
         </div>
 
         {stop && (
@@ -51,8 +57,11 @@ export default function StopSidebar({
               </div>
             </div>
 
+            {/* Activities */}
             <section>
-              <h4 className="font-semibold mb-2 text-[var(--color-brand)]">{t('sidebar.activities')}</h4>
+              <h4 className="font-semibold mb-2 text-[var(--color-brand)]">
+                {t('sidebar.activities')}
+              </h4>
               <div className="space-y-2">
                 {stop.activities.length === 0 && (
                   <div className="text-sm text-[var(--color-muted)]">{t('sidebar.none')}</div>
@@ -65,13 +74,17 @@ export default function StopSidebar({
                     <input
                       className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] mb-2 bg-white"
                       value={a.title}
-                      onChange={(e) => setActivityField(stop.id, a.id, 'title', e.target.value)}
+                      onChange={(e) =>
+                        setActivityField(stop.id, a.id, 'title', e.target.value)
+                      }
                     />
                     <div className="flex items-center gap-2 mb-2">
                       <select
                         className="px-3 py-2 rounded-lg border border-[var(--color-border)] bg-white"
                         value={a.category}
-                        onChange={(e) => setActivityField(stop.id, a.id, 'category', e.target.value)}
+                        onChange={(e) =>
+                          setActivityField(stop.id, a.id, 'category', e.target.value)
+                        }
                       >
                         <option value="nature">{t('sidebar.category.nature')}</option>
                         <option value="food">{t('sidebar.category.food')}</option>
@@ -83,9 +96,22 @@ export default function StopSidebar({
                         className="flex-1 px-3 py-2 rounded-lg border border-[var(--color-border)] bg-white"
                         placeholder={t('sidebar.note')}
                         value={a.note || ''}
-                        onChange={(e) => setActivityField(stop.id, a.id, 'note', e.target.value)}
+                        onChange={(e) =>
+                          setActivityField(stop.id, a.id, 'note', e.target.value)
+                        }
                       />
                     </div>
+
+                    {/* 🔗 Link kutusu */}
+                    <input
+                      type="url"
+                      className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] mb-2 bg-white"
+                      placeholder="https://example.com"
+                      value={a.link || ''}
+                      onChange={(e) =>
+                        setActivityField(stop.id, a.id, 'link', e.target.value)
+                      }
+                    />
 
                     <label className="inline-flex items-center gap-2 px-2 py-2 rounded-lg border border-[var(--color-border)] bg-white">
                       <span>{t('sidebar.cost')}</span>
@@ -123,8 +149,11 @@ export default function StopSidebar({
               </div>
             </section>
 
+            {/* Lodging & Food & Other */}
             <section className="space-y-2">
-              <h4 className="font-semibold text-[var(--color-brand)]">{t('sidebar.lodgingFoodOther')}</h4>
+              <h4 className="font-semibold text-[var(--color-brand)]">
+                {t('sidebar.lodgingFoodOther')}
+              </h4>
 
               {(() => {
                 const nights = stop.stayNights || 0

@@ -12,9 +12,11 @@ export type Activity = {
   id: string
   title: string
   category: string
-  cost: number
   note?: string
+  cost?: number
+  link?: string   // 🔥 eklendi
 }
+
 
 export type Budget = {
   lodgingPerNight?: number
