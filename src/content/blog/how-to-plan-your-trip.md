@@ -1,5 +1,5 @@
 ---
-slug: how-to-plan-your-trip
+slug: "How to Plan Your Trip with OneTrip App (Beginner’s Guide)"
 title: "How to Plan Your Trip with OneTrip App (Beginner’s Guide)"
 date: "2025-09-11"
 excerpt: "Step-by-step guide to plan your journey with OneTrip. Add stops, calculate budgets, and share routes easily."

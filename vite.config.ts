@@ -11,5 +11,6 @@ export default defineConfig({
       '@pages': path.resolve(__dirname, 'src/pages'),
     },
   },
-  assetsInclude: ['**/*.md'], // 🔥 Markdown dosyalarını asset olarak tanır
+  // ❌ Bunu kaldırdık: assetsInclude: ['**/*.md']
+  // Çünkü biz md dosyalarını asset değil raw içerik olarak istiyoruz
 })
