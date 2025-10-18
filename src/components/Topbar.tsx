@@ -1,46 +1,59 @@
-// src/components/Topbar.tsx
 import { useRef, useState, useEffect } from 'react'
-import { Link, useNavigate, useLocation } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import type { Trip } from '@lib/types'
-import { toCSV } from '@lib/csv'
 import { hashEncode } from '@lib/storage'
 import ShareModal from './ShareModal'
 import { useI18n } from '../i18n'
+import { useAuth } from '../auth/AuthProvider'
+import { supabase } from '@lib/supabase'
 
 type TopbarProps = {
   trip?: Trip
   setTripField?: (f: keyof Trip, v: any) => void
-  onUndo?: () => void
-  onRedo?: () => void
-  onImportJSON?: (file: File) => void
+  variant?: 'planner' | 'default'
 }
 
 export default function Topbar({
   trip,
   setTripField,
-  onUndo,
-  onRedo,
-  onImportJSON,
+  variant = 'default',
 }: TopbarProps) {
   const { t, lang, setLang } = useI18n()
-  const fileRef = useRef<HTMLInputElement>(null)
   const [showShare, setShowShare] = useState(false)
-
   const [menuOpen, setMenuOpen] = useState(false)
+  const [isLangMenuOpen, setLangMenuOpen] = useState(false)
+  const [isCurrencyMenuOpen, setCurrencyMenuOpen] = useState(false)
+  
   const menuRef = useRef<HTMLDivElement>(null)
+  const langMenuRef = useRef<HTMLDivElement>(null)
+  const currencyMenuRef = useRef<HTMLDivElement>(null)
+  
+  const { user } = useAuth()
+  const hasPlannerControls = variant === 'planner' && !!trip && !!setTripField
 
-  const hasPlannerControls = !!trip && !!setTripField
-
-  const navigate = useNavigate()
-  const routeLocation = useLocation()
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+  }
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
         setMenuOpen(false)
       }
+      if (langMenuRef.current && !langMenuRef.current.contains(e.target as Node)) {
+        setLangMenuOpen(false)
+      }
+      if (currencyMenuRef.current && !currencyMenuRef.current.contains(e.target as Node)) {
+        setCurrencyMenuOpen(false)
+      }
     }
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setMenuOpen(false) }
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setMenuOpen(false)
+        setLangMenuOpen(false)
+        setCurrencyMenuOpen(false)
+      }
+    }
     document.addEventListener('mousedown', handleClickOutside)
     document.addEventListener('keydown', onKey)
     return () => {
@@ -49,7 +62,6 @@ export default function Topbar({
     }
   }, [])
 
-  // URL oluştur
   const shareUrl = () =>
     trip
       ? `${window.location.origin}${window.location.pathname}#plan=${hashEncode(trip)}`
@@ -63,80 +75,28 @@ export default function Topbar({
       try {
         await navigator.share({ title, text, url })
         return
-      } catch {/* user cancelled or not supported */}
+      } catch { /* user cancelled or not supported */ }
     }
     setShowShare(true)
   }
 
-  const exportJSON = () => {
-    if (!trip) return
-    const blob = new Blob([JSON.stringify(trip, null, 2)], { type: 'application/json' })
-    const a = document.createElement('a')
-    a.href = URL.createObjectURL(blob)
-    a.download = (trip.title || 'trip') + '.json'
-    a.click()
+  const languageOptions: { [key: string]: { flag: string; name: string } } = {
+    en: { flag: '🇬🇧', name: 'English' },
+    tr: { flag: '🇹🇷', name: 'Türkçe' },
+    de: { flag: '🇩🇪', name: 'Deutsch' },
   }
 
-  const exportCSV = () => {
-    if (!trip) return
-    const blob = new Blob([toCSV(trip)], { type: 'text/csv' })
-    const a = document.createElement('a')
-    a.href = URL.createObjectURL(blob)
-    a.download = (trip.title || 'trip') + '.csv'
-    a.click()
-  }
-
-  // ✅ Print butonu artık /print route’una trip state ile gidiyor
-  const handleGeneratePDF = () => {
-    if (!trip) return
-    navigate('/print', { state: { trip, from: routeLocation.pathname } })
-  }
-
-  const travelerEmoji = (n: number) => {
-    if (n === 1) return '👤'
-    if (n === 2) return '👥'
-    if (n >= 3 && n <= 5) return '🧑‍🤝‍🧑'
-    if (n > 5) return '🧑‍🤝‍🧑+'
-    return '👤'
+  const currencyOptions: { [key: string]: { symbol: string; name: string } } = {
+    EUR: { symbol: '€', name: 'Euro' },
+    USD: { symbol: '$', name: 'US Dollar' },
+    TRY: { symbol: '₺', name: 'Turkish Lira' },
+    GBP: { symbol: '£', name: 'British Pound' },
   }
 
   return (
     <header className="sticky top-0 z-40 backdrop-blur bg-[var(--color-bg)]/85 border-b border-[var(--color-border)] shadow-sm print:hidden">
       <div className="mx-auto max-w-7xl px-4 py-3 flex items-center justify-between gap-3">
-        {/* LEFT: Hamburger + planner inputs */}
         <div className="flex items-center gap-3 min-w-0">
-          <div className="relative" ref={menuRef}>
-            <button
-              className="flex flex-col justify-center items-center w-9 h-9 rounded-md border border-[var(--color-border)] bg-white hover:bg-gray-100"
-              onClick={() => setMenuOpen(o => !o)}
-              aria-label="Open menu"
-              title="Menu"
-            >
-              <span className="w-5 h-0.5 bg-gray-800 mb-1"></span>
-              <span className="w-5 h-0.5 bg-gray-800 mb-1"></span>
-              <span className="w-5 h-0.5 bg-gray-800"></span>
-            </button>
-
-            {menuOpen && (
-              <div className="absolute left-0 top-11 w-44 rounded-md border border-[var(--color-border)] bg-white shadow-md">
-                <Link
-                  to="/blog"
-                  className="block px-4 py-2 hover:bg-gray-100"
-                  onClick={() => setMenuOpen(false)}
-                >
-                  {t('menu.blog')}
-                </Link>
-                <Link to="/about" className="block px-4 py-2 hover:bg-gray-100" onClick={() => setMenuOpen(false)}>
-                  {t('menu.about')}
-                </Link>
-                <Link to="/contact" className="block px-4 py-2 hover:bg-gray-100" onClick={() => setMenuOpen(false)}>
-                  {t('menu.contact')}
-                </Link>
-
-              </div>
-            )}
-          </div>
-
           {hasPlannerControls && (
             <>
               <input
@@ -145,86 +105,127 @@ export default function Topbar({
                 value={trip!.title}
                 onChange={(e) => setTripField!('title', e.target.value)}
               />
-              <select
-                value={trip!.currency}
-                onChange={(e) => setTripField!('currency', e.target.value)}
-                className="px-2 py-2 rounded-xl border border-[var(--color-border)] bg-white"
-              >
-                <option>EUR</option>
-                <option>USD</option>
-                <option>TRY</option>
-                <option>GBP</option>
-              </select>
+              
+              <div className="relative" ref={currencyMenuRef}>
+                <button
+                  onClick={() => setCurrencyMenuOpen(o => !o)}
+                  className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-gray-100/50 transition-colors"
+                  title="Change currency"
+                >
+                  <span className="font-semibold text-[var(--color-accent)]">{currencyOptions[trip!.currency]?.symbol || trip!.currency}</span>
+                  <span className="text-sm font-bold">{trip!.currency}</span>
+                  {/* --- AŞAĞI OK İKONU BURADAN KALDIRILDI --- */}
+                </button>
+                {isCurrencyMenuOpen && (
+                  <div 
+                    className="absolute left-0 top-12 w-48 rounded-xl border border-[var(--color-border)] bg-white shadow-lg py-1 animate-fadeIn"
+                    style={{ animationDuration: '150ms' }}
+                  >
+                    {Object.entries(currencyOptions).map(([code, { symbol, name }]) => (
+                      <button
+                        key={code}
+                        onClick={() => { setTripField!('currency', code); setCurrencyMenuOpen(false); }}
+                        className="flex items-center gap-3 px-4 py-2 hover:bg-gray-100 w-full text-left"
+                      >
+                        <span className="font-semibold w-5 text-center text-lg">{symbol}</span>
+                        <span className="font-medium text-sm">{name} ({code})</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               <label className="flex items-center gap-3 px-2 py-2 rounded-xl border border-[var(--color-border)] bg-white">
                 <span>{t('topbar.people')}</span>
                 <input
-                  type="range"
-                  min={1}
-                  max={10}
+                  type="range" min={1} max={10}
                   value={Number(trip!.participants ?? 1)}
                   onChange={(e) => setTripField!('participants', Number(e.target.value))}
                   className="w-32 accent-[var(--color-brand)]"
                 />
                 <span className="font-medium text-[var(--color-accent)]">{Number(trip!.participants ?? 1)}</span>
-                <span className="text-xl">{travelerEmoji(Number(trip?.participants ?? 1))}</span>
+                <span className="text-xl">👥</span>
               </label>
             </>
           )}
         </div>
 
-        {/* CENTER: Logo */}
-        <div className="flex-shrink-0">
-          <Link to="/" title="Home">
-            <img src={trip?.logoDataUrl || '/logo.png'} alt="logo" className="h-12 w-12 rounded-full shadow-sm" />
-          </Link>
-        </div>
-
-        {/* RIGHT: Actions */}
         <div className="flex items-center gap-2">
-          <button className="px-3 py-2 rounded-xl border border-[var(--color-border)] bg-white" onClick={share} title={t('topbar.actions.share')}>
+          <button
+            className="px-3 py-2 rounded-xl border border-[var(--color-border)] bg-white"
+            onClick={share}
+            title={t('topbar.actions.share')}
+          >
             {t('topbar.actions.share')}
           </button>
 
-          {/* Language Selector */}
-          <label className="px-2 py-2 rounded-xl border border-[var(--color-border)] bg-white flex items-center gap-2">
-            <span>🌐</span>
-            <select value={lang} onChange={(e) => setLang(e.target.value as any)} className="bg-transparent outline-none">
-              <option value="tr">🇹🇷</option>
-              <option value="en">🇬🇧</option>
-              <option value="de">🇩🇪</option>
-            </select>
-          </label>
+          <div className="relative" ref={langMenuRef}>
+            <button
+              onClick={() => setLangMenuOpen(o => !o)}
+              className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-gray-100/50 transition-colors"
+              title="Change language"
+            >
+              <span className="text-xl select-none">{languageOptions[lang]?.flag || '🌐'}</span>
+            </button>
+            {isLangMenuOpen && (
+              <div 
+                className="absolute right-0 top-12 w-40 rounded-xl border border-[var(--color-border)] bg-white shadow-lg py-1 animate-fadeIn"
+                style={{ animationDuration: '150ms' }}
+              >
+                {Object.entries(languageOptions).map(([code, { flag, name }]) => (
+                  <button
+                    key={code}
+                    onClick={() => { setLang(code as any); setLangMenuOpen(false); }}
+                    className="flex items-center gap-3 px-4 py-2 hover:bg-gray-100 w-full text-left"
+                  >
+                    <span className="text-xl">{flag}</span>
+                    <span className="font-medium text-sm">{name}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
 
-          {hasPlannerControls && (
-            <nav className="toolbar flex items-center gap-2">
-              <div className="segment">
-                <button onClick={exportJSON} className="px-2 py-1 rounded-md border" title={t('topbar.exportJSON')}>🧾</button>
-                <button onClick={exportCSV} className="px-2 py-1 rounded-md border" title={t('topbar.exportCSV')}>📊</button>
-                <button onClick={handleGeneratePDF} className="px-2 py-1 rounded-md border" title={t('topbar.print')}>🖨️</button>
-              </div>
-              <div className="segment">
-                <button onClick={onUndo} className="px-2 py-1 rounded-md border" title={t('topbar.undo')}>↩️</button>
-                <button onClick={onRedo} className="px-2 py-1 rounded-md border" title={t('topbar.redo')}>↪️</button>
-              </div>
-              <div className="segment">
-                <input
-                  ref={fileRef}
-                  type="file"
-                  accept="application/json"
-                  className="hidden"
-                  onChange={(e) => {
-                    const f = e.currentTarget.files?.[0]
-                    if (f && onImportJSON) onImportJSON(f)
-                    e.currentTarget.value = ''
-                  }}
-                />
-                <button onClick={() => fileRef.current?.click()} className="px-2 py-1 rounded-md border" title={t('topbar.importJSON') || 'Import JSON'}>📥</button>
-              </div>
-            </nav>
+          {user ? (
+            <>
+              <span className="text-sm text-[var(--color-muted)]">{user.email}</span>
+              <button onClick={handleLogout} className="px-3 py-1 rounded-lg bg-red-600 text-white hover:bg-red-700">
+                Logout
+              </button>
+            </>
+          ) : (
+            <Link to="/login" className="px-3 py-1 rounded-lg bg-[var(--color-brand)] text-white hover:bg-[var(--color-brand-dark)]">
+              Login
+            </Link>
           )}
+
+          <div className="relative" ref={menuRef}>
+            <button
+              className="flex flex-col justify-center items-center w-9 h-9 rounded-md border border-[var(--color-border)] bg-white hover:bg-gray-100"
+              onClick={() => setMenuOpen((o) => !o)}
+              aria-label="Open menu"
+              title="Menu"
+            >
+              <span className="w-5 h-0.5 bg-gray-800 mb-1"></span>
+              <span className="w-5 h-0.5 bg-gray-800 mb-1"></span>
+              <span className="w-5 h-0.5 bg-gray-800"></span>
+            </button>
+            {menuOpen && (
+              <div className="absolute right-0 top-11 w-44 rounded-md border border-[var(--color-border)] bg-white shadow-md">
+                <Link to="/blog" className="block px-4 py-2 hover:bg-gray-100" onClick={() => setMenuOpen(false)}>
+                  {t('menu.blog')}
+                </Link>
+                <Link to="/about" className="block px-4 py-2 hover:bg-gray-100" onClick={() => setMenuOpen(false)}>
+                  {t('menu.about')}
+                </Link>
+                <Link to="/contact" className="block px-4 py-2 hover:bg-gray-100" onClick={() => setMenuOpen(false)}>
+                  {t('menu.contact')}
+                </Link>
+              </div>
+            )}
+          </div>
         </div>
       </div>
-
       <ShareModal open={showShare} url={shareUrl()} title={trip?.title || 'OneTrip route'} onClose={() => setShowShare(false)} />
     </header>
   )

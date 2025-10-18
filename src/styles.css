@@ -351,3 +351,64 @@ input::placeholder,textarea::placeholder { color:var(--color-muted) }
   border-color: var(--color-brand);
 }
 
+@keyframes gradientMove {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: gradientMove 15s ease infinite;
+}
+
+@keyframes pulseSlow {
+  0%, 100% { transform: scale(0.9); opacity: 0.6; }
+  50% { transform: scale(1.1); opacity: 1; }
+}
+.animate-pulse-slow {
+  animation: pulseSlow 6s ease-in-out infinite;
+}
+
+/* === Sidebar Gamepad Styles === */
+
+/* Kenar çubuğunun "nefes alan" parlama efekti için keyframe */
+@keyframes breathing-glow {
+  0% {
+    box-shadow: 0 0 10px rgba(44, 166, 164, 0.2), 0 0 20px rgba(44, 166, 164, 0.2), 0 0 1px 1px rgba(255,255,255,0.8) inset;
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(44, 166, 164, 0.4), 0 0 30px rgba(44, 166, 164, 0.3), 0 0 1px 1px rgba(255,255,255,0.8) inset;
+  }
+  100% {
+    box-shadow: 0 0 10px rgba(44, 166, 164, 0.2), 0 0 20px rgba(44, 166, 164, 0.2), 0 0 1px 1px rgba(255,255,255,0.8) inset;
+  }
+}
+
+.animate-breathing-glow {
+  animation: breathing-glow 5s ease-in-out infinite;
+}
+
+/* Kenar çubuğu butonları için özel stil */
+.sidebar-btn {
+  display: grid;
+  place-items: center;
+  width: 44px; /* 11 in Tailwind units */
+  height: 44px;
+  border-radius: 14px; /* more rounded than a simple square */
+  background-color: #ffffff;
+  border: 1px solid var(--color-border);
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidebar-btn:hover {
+  transform: translateY(-3px) scale(1.15);
+  background-color: var(--color-brand);
+  color: white;
+  box-shadow: 0 10px 15px -3px color-mix(in oklab, var(--color-brand) 30%, transparent), 0 4px 6px -4px color-mix(in oklab, var(--color-brand) 30%, transparent);
+}
+
+.sidebar-btn:active {
+  transform: translateY(-1px) scale(1.05);
+  filter: brightness(0.9);
+}

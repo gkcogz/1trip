@@ -1,4 +1,5 @@
 // src/components/StopsTimeline.tsx
+
 import { useEffect, useRef, useState } from 'react'
 import { Trip } from '@lib/types'
 import SectionHeader from './SectionHeader'
@@ -8,6 +9,7 @@ import { EmojiButton } from './ui'
 import { useI18n } from '../i18n'
 import ResetModal from './ResetModal'
 
+// DEĞİŞİKLİK: Prop'lar güncellendi
 export default function StopsTimeline({
   trip,
   addStop,
@@ -17,6 +19,9 @@ export default function StopsTimeline({
   moveStop,
   setLegField,
   setTripField,
+  onNewTrip,
+  onSaveTrip,
+  onLoadTrips,
 }: {
   trip: Trip
   addStop: () => void
@@ -26,6 +31,9 @@ export default function StopsTimeline({
   moveStop: (id: string, dir: 'up' | 'down') => void
   setLegField: (id: string, field: any, value: any) => void
   setTripField: (f: keyof Trip, v: any) => void
+  onNewTrip: () => void
+  onSaveTrip: () => void
+  onLoadTrips: () => void
 }) {
   const { t } = useI18n()
   const [activeStopId, setActiveStopId] = useState<string | null>(null)
@@ -37,8 +45,7 @@ export default function StopsTimeline({
   const setCardRef = (id: string) => (el: HTMLDivElement | null) => {
     cardRefs.current[id] = el
   }
-
-  // yeni durak eklendiğinde flicker önle
+  
   const prevCountRef = useRef<number>(trip.stops?.length ?? 0)
   useEffect(() => {
     const prev = prevCountRef.current
@@ -58,7 +65,6 @@ export default function StopsTimeline({
     prevCountRef.current = curr
   }, [trip.stops, setSelectedStopId])
 
-  // aktif durak silindiyse paneli kapat
   useEffect(() => {
     if (!activeStopId) return
     const stillThere = (trip.stops ?? []).some((s) => s.id === activeStopId)
@@ -80,7 +86,6 @@ export default function StopsTimeline({
     if (el) el.scrollIntoView({ block: 'center', behavior: 'smooth' })
   }
 
-  // ✅ Reset artık currency ve participants’i koruyor
   const handleResetTrip = () => {
     setActiveStopId(null)
     setSelectedStopId(null)
@@ -90,16 +95,37 @@ export default function StopsTimeline({
 
   return (
     <div className="relative space-y-4" ref={wrapperRef}>
+      {/* DEĞİŞİKLİK: SectionHeader'ın action prop'u güncellendi */}
       <SectionHeader
         title={t('stops.header')}
         action={
-          <EmojiButton
-            emoji="➕"
-            label={t('stops.add')}
-            title={t('stops.add')}
-            onClick={handleAddStop}
-            variant="btn"
-          />
+          <div className="flex items-center gap-2">
+            <EmojiButton
+              emoji="📑"
+              label={"Rotaları Yükle"}
+              onClick={onLoadTrips}
+              variant="btn"
+            />
+            <EmojiButton
+              emoji="💾"
+              label={"Kaydet"}
+              onClick={onSaveTrip}
+              variant="btn"
+            />
+             <EmojiButton
+              emoji="✨"
+              label={"Yeni Rota"}
+              onClick={onNewTrip}
+              variant="btn"
+            />
+            <div className="w-px h-6 bg-gray-200 mx-2" />
+            <EmojiButton
+              emoji="➕"
+              label={t('stops.add')}
+              onClick={handleAddStop}
+              variant="btn"
+            />
+          </div>
         }
       />
 

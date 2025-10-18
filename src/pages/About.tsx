@@ -2,7 +2,6 @@ export default function About() {
   return (
     <main className="mx-auto max-w-5xl p-6">
       <div className="card p-8">
-        {/* Header with favicon */}
         <div className="flex items-center gap-3 mb-6">
           <img
             src="/favicon.png"
@@ -36,10 +35,9 @@ export default function About() {
           </div>
         </div>
 
-        {/* Creator Card */}
         <div className="glass p-5 rounded-2xl flex items-center gap-4">
           <img
-            src="/creator.png"
+            src="/creator.jpg"
             alt="Creator avatar"
             className="w-12 h-12 rounded-full shadow-md"
           />
@@ -52,5 +50,5 @@ export default function About() {
         </div>
       </div>
     </main>
-  )
+  );
 }

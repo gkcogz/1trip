@@ -41,5 +41,5 @@ export default function BlogPost() {
         </Link>
       </div>
     </div>
-  )
+  );
 }

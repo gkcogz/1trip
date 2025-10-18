@@ -1,8 +1,9 @@
-import { Link } from "react-router-dom"
-import { blogPosts } from "../lib/loadBlogPosts"
+import { Link } from "react-router-dom";
+import { blogPosts } from "../lib/loadBlogPosts";
+// Layout import'u ve sarmalayıcısı artık GEREKLİ DEĞİL.
 
 export default function Blog() {
-  const posts = blogPosts // sadece EN
+  const posts = blogPosts;
 
   return (
     <div className="max-w-5xl mx-auto p-6 space-y-10">
@@ -14,7 +15,6 @@ export default function Blog() {
           Travel stories, guides, and updates from OneTrip Community.
         </p>
       </header>
-
       <div className="grid md:grid-cols-2 gap-8">
         {posts.map((post) => (
           <article
@@ -38,5 +38,5 @@ export default function Blog() {
         ))}
       </div>
     </div>
-  )
+  );
 }

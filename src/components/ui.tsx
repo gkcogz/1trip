@@ -1,7 +1,12 @@
-import React from 'react'
+import React from "react"
+import ReactDOM from "react-dom"
 
-export function Badge({children}:{children:React.ReactNode}){
-  return <span className="inline-flex items-center px-2 py-1 rounded-full bg-neutral-100">{children}</span>
+export function Badge({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="inline-flex items-center px-2 py-1 rounded-full bg-neutral-100">
+      {children}
+    </span>
+  )
 }
 
 /**
@@ -9,7 +14,13 @@ export function Badge({children}:{children:React.ReactNode}){
  * - Etiket alanına sabit min yükseklik veriyoruz (2 satır sığacak kadar).
  * - Böylece etiket tek satır / çift satır olsa da inputlar aynı düşey hizadan başlar.
  */
-export function Field({label,children}:{label:string,children:React.ReactNode}){
+export function Field({
+  label,
+  children,
+}: {
+  label: string
+  children: React.ReactNode
+}) {
   return (
     <label className="block text-sm">
       {/* min-h- ile hizalama, items-end ile altına yasla */}
@@ -22,14 +33,23 @@ export function Field({label,children}:{label:string,children:React.ReactNode}){
 }
 
 /** ModeButton (toggleable chip, used in LegEditor) */
-export function ModeButton({active,onClick,children}:{active:boolean,onClick:()=>void,children:React.ReactNode}){
+export function ModeButton({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean
+  onClick: () => void
+  children: React.ReactNode
+}) {
   return (
     <button
       onClick={onClick}
       className={`group inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border transition-colors
-        ${active
-          ? 'bg-[var(--color-brand)] text-white border-[var(--color-brand)] shadow'
-          : 'bg-white text-[var(--color-accent)] border-[var(--color-border)] hover:bg-[var(--color-brand)]/10'
+        ${
+          active
+            ? "bg-[var(--color-brand)] text-white border-[var(--color-brand)] shadow"
+            : "bg-white text-[var(--color-accent)] border-[var(--color-border)] hover:bg-[var(--color-brand)]/10"
         }`}
     >
       {children}
@@ -48,21 +68,24 @@ export function EmojiButton({
   label,
   title,
   onClick,
-  variant = 'btn',
-  className = ''
-}:{
+  variant = "btn",
+  className = "",
+}: {
   emoji: string
   label: string
   title?: string
   onClick?: () => void
-  variant?: 'btn'|'ghost'|'icon'|'chip'
+  variant?: "btn" | "ghost" | "icon" | "chip"
   className?: string
-}){
+}) {
   const base =
-    variant === 'btn'   ? 'btn' :
-    variant === 'ghost' ? 'btn-ghost' :
-    variant === 'icon'  ? 'btn-icon' :
-    /* chip */            'chip'
+    variant === "btn"
+      ? "btn"
+      : variant === "ghost"
+      ? "btn-ghost"
+      : variant === "icon"
+      ? "btn-icon"
+      : /* chip */ "chip"
 
   // İçerde metni hover’da açmak için group + transition kullanıyoruz.
   return (
@@ -73,23 +96,85 @@ export function EmojiButton({
       className={`group ${base} ${className}`}
       aria-label={label}
     >
-      <span aria-hidden className="select-none">{emoji}</span>
+      <span aria-hidden className="select-none">
+        {emoji}
+      </span>
       {/* SR-only label (her zaman var) */}
       <span className="sr-only">{label}</span>
       {/* Görsel etiket: default gizli, hover’da genişler */}
       <span
         aria-hidden
         className={
-          // chip & icon dar oldukları için biraz farklı animasyon
-          (variant === 'icon'
-            ? 'ml-0'
-            : 'ml-1') +
-          ' max-w-0 opacity-0 overflow-hidden whitespace-nowrap ' +
-          'group-hover:max-w-[220px] group-hover:opacity-100 transition-all duration-200 ease-out'
+          (variant === "icon" ? "ml-0" : "ml-1") +
+          " max-w-0 opacity-0 overflow-hidden whitespace-nowrap " +
+          "group-hover:max-w-[220px] group-hover:opacity-100 transition-all duration-200 ease-out"
         }
       >
         {label}
       </span>
     </button>
   )
+}
+
+/**
+ * ToastMessage:
+ * - Ekranın sağ alt köşesinde kısa süre görünen bildirim.
+ * - Renk, varyant ve otomatik kapanma desteği.
+ */
+export function ToastMessage({
+  message,
+  type = "info",
+  duration = 3000,
+}: {
+  message: string
+  type?: "success" | "error" | "info"
+  duration?: number
+}) {
+  const [visible, setVisible] = React.useState(true)
+
+  React.useEffect(() => {
+    const t = setTimeout(() => setVisible(false), duration)
+    return () => clearTimeout(t)
+  }, [duration])
+
+  const colors =
+    type === "success"
+      ? "bg-green-600 text-white"
+      : type === "error"
+      ? "bg-red-600 text-white"
+      : "bg-[var(--color-brand)] text-white"
+
+  if (!visible) return null
+
+  return (
+    <div className="fixed bottom-5 right-5 z-[9999] transition-opacity duration-300">
+      <div
+        className={`px-4 py-2 rounded-xl shadow-lg text-sm font-medium ${colors} backdrop-blur-md`}
+      >
+        {message}
+      </div>
+    </div>
+  )
+}
+
+/**
+ * showToast:
+ * - Programatik olarak toast göstermek için.
+ * - Her çağrıda geçici bir ToastMessage oluşturur.
+ */
+export function showToast(
+  message: string,
+  type: "success" | "error" | "info" = "info"
+) {
+  const container = document.createElement("div")
+  document.body.appendChild(container)
+
+  const cleanup = () => {
+    ReactDOM.unmountComponentAtNode(container)
+    container.remove()
+  }
+
+  ReactDOM.render(<ToastMessage message={message} type={type} />, container)
+
+  setTimeout(cleanup, 3500)
 }
