@@ -184,6 +184,7 @@ export default function PlannerWrapper({ printMode = false }: { printMode?: bool
         onClose={() => setLoadModalOpen(false)}
         trips={savedTrips}
         onSelectTrip={setTrip}
+        onDeleteTrip={() => {}} // ✅ add this line
       />
 
       <ConfirmModal
